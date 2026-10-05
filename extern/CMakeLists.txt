@@ -36,7 +36,7 @@ else ()
   set(ABSL_PROPAGATE_CXX_STD ON)
   if (PS5)
     FetchContent_Declare(abseil-cpp
-      GIT_REPOSITORY https://github.com/mshivam019/ttp-ps5.git
+      GIT_REPOSITORY https://github.com/mshivam019/dusklight-ps5.git
       GIT_TAG 5c695e68fcd3e7483ed300b6591d1ec49ae37cf4
       EXCLUDE_FROM_ALL
     )
