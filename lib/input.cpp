@@ -16,6 +16,10 @@
 
 using namespace std::string_view_literals;
 
+#ifdef __PROSPERO__
+extern "C" void ps5_input_initialize();
+extern "C" void ps5_input_shutdown();
+#endif
 namespace aurora::input {
 absl::flat_hash_map<Uint32, GameController> g_GameControllers;
 
@@ -450,6 +454,9 @@ void persist_controller_for_player(uint32_t player, const GameController* contro
 }
 
 void initialize() noexcept {
+#ifdef __PROSPERO__
+  ps5_input_initialize();
+#endif
   /* Make sure we initialize everything input related now, this will automatically add all of the connected controllers
    * as expected */
   AURORA_ASSERT(SDL_Init(SDL_INIT_HAPTIC | SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD | SDL_INIT_SENSOR),
@@ -474,6 +481,9 @@ void get_mouse_scroll(float* scrollX, float* scrollY) noexcept {
 }
 
 void shutdown() noexcept {
+#ifdef __PROSPERO__
+  ps5_input_shutdown();
+#endif
   // Upon shutdown we want to ensure all controllers are in a default state, so force all rumble supporting controllers
   // to shut off their rumble motors.
   for (const auto& controller : g_GameControllers) {

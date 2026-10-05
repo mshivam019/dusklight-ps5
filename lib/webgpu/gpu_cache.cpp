@@ -106,7 +106,7 @@ static bool cache_init_core() {
   Log.debug("Using dawn cache at {}", file);
   auto ret = sqlite3_open(file.c_str(), &db);
   if (ret != SQLITE_OK) {
-    Log.error("Failed to open database: {}", sqlite3_errmsg(db));
+    Log.error("Failed to open database: {} (system errno {})", sqlite3_errmsg(db), sqlite3_system_errno(db));
     return false;
   }
 

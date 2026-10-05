@@ -3,6 +3,7 @@
 #include <aurora/webgpu.hpp>
 
 #include <memory>
+#include <cstdio>
 
 #if !defined(SDL_PLATFORM_MACOS) && !defined(SDL_PLATFORM_IOS) && !defined(SDL_PLATFORM_TVOS)
 #include <SDL3/SDL_video.h>
@@ -14,7 +15,15 @@ namespace utils {
 std::shared_ptr<wgpu::ChainedStruct> SetupWindowAndGetSurfaceDescriptorCocoa(SDL_Window* window);
 
 std::shared_ptr<wgpu::ChainedStruct> SetupWindowAndGetSurfaceDescriptor(SDL_Window* window) {
-#if defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_IOS) || defined(SDL_PLATFORM_TVOS)
+#if defined(__PROSPERO__)
+  auto desc = std::make_shared<wgpu::SurfaceSourceDirectDisplay>();
+  int width = 0, height = 0;
+  SDL_GetWindowSizeInPixels(window, &width, &height);
+  std::fprintf(stderr, "[Aurora PS5] Surface requested: %d x %d\n", width, height);
+  desc->width = width;
+  desc->height = height;
+  return desc;
+#elif defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_IOS) || defined(SDL_PLATFORM_TVOS)
   return SetupWindowAndGetSurfaceDescriptorCocoa(window);
 #else
   const auto props = SDL_GetWindowProperties(window);

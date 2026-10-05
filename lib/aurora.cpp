@@ -31,6 +31,9 @@
 #include "system_info.hpp"
 #include "tracy/Tracy.hpp"
 
+#ifdef __PROSPERO__
+extern "C" void ps5_input_poll();
+#endif
 namespace aurora {
 AuroraConfig g_config;
 uint32_t g_sdlCustomEventsStart;
@@ -229,6 +232,9 @@ const AuroraEvent* update() noexcept {
   }
 #ifdef AURORA_ENABLE_GX
   gx::update();
+#endif
+#ifdef __PROSPERO__
+  ps5_input_poll();
 #endif
   return window::poll_events();
 }
