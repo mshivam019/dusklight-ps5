@@ -125,12 +125,14 @@ a complete empty-machine RADV bootstrap has not yet been verified.
 
 ## Credits and licensing
 
-Thanks to the Twilit Realm/Dusklight team, zeldaret's Twilight Princess decompilation
-contributors, Luke Street and the Aurora/Borealis contributors, John Törnblom and
-ps5-payload-dev, Mihawk for the PS5 Vulkan/Mesa work, and BlackBearReloaded for the
-native runtime foundation. SDL, Dawn, Mesa, LLVM and the other dependency authors
-are credited in the packaged notices and corresponding source.
-Henriko Magnifico and contributors made the optional texture pack and controller addon.
+- [Twilit Realm](https://github.com/TwilitRealm) and the [Dusklight contributors](https://github.com/TwilitRealm/dusklight): the original PC port and engine.
+- [zeldaret](https://github.com/zeldaret): the [Twilight Princess decompilation](https://github.com/zeldaret/tp).
+- [Luke Street / encounter](https://github.com/encounter): [Aurora](https://github.com/encounter/aurora) and [Borealis](https://github.com/encounter/borealis).
+- [John Törnblom](https://github.com/john-tornblom) and [ps5-payload-dev](https://github.com/ps5-payload-dev): the [PS5 homebrew SDK](https://github.com/ps5-payload-dev/sdk).
+- [Mihawk](https://github.com/mihawk-99): [PS5 Vulkan](https://github.com/mihawk-99/PS5_Vulkan), [PS5 Mesa](https://github.com/mihawk-99/PS5_Mesa) and [PS5 PayloadSDK](https://github.com/mihawk-99/PS5_PayloadSDK).
+- [BlackBearReloaded](https://github.com/blackbearreloaded): the [native app boilerplate](https://github.com/blackbearreloaded/ps5-native-app-boilerplate) and [PS5 OpenGL work](https://github.com/blackbearreloaded/ps5-opengl) underlying parts of the native runtime and graphics tooling.
+- The [SDL](https://github.com/libsdl-org/SDL), [Dawn](https://dawn.googlesource.com/dawn), [Mesa](https://gitlab.freedesktop.org/mesa/mesa) and [LLVM](https://github.com/llvm/llvm-project) teams, plus the other authors listed in the packaged notices and corresponding source.
+- [Henriko Magnifico](https://www.henrikomagnifico.com/zelda-twilight-princess-4k) and contributors: the optional HD texture pack and PlayStation controller addon, downloaded separately.
 
 Upstream Dusklight is CC0. The linked PS5 platform/runtime is GPL-3.0-or-later;
 other components retain their own licenses. Corresponding source accompanies releases.
