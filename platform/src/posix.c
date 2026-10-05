@@ -16,6 +16,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -295,4 +296,16 @@ ps5_dladdr(const void *address, void *info)
    (void)address;
    (void)info;
    return 0;
+}
+
+/* libc++ queries this before getcwd. The SDK's fixed path buffer limit is
+ * available without importing libkernel_sys's unavailable pathconf entry. */
+long ps5_pathconf(const char *path, int name)
+{
+   struct stat status;
+   if (!path) { errno = EFAULT; return -1; }
+   if (stat(path, &status) != 0) return -1;
+   if (name == _PC_PATH_MAX) return PATH_MAX;
+   errno = EINVAL;
+   return -1;
 }

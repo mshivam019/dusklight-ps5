@@ -268,6 +268,8 @@ int ps5_link(const char *existing, const char *name);
 int ps5_symlink(const char *target, const char *name);
 ssize_t ps5_readlink(const char *path, char *buffer, size_t size);
 int ps5_fchown(int fd, uid_t owner, gid_t group);
+/* Fixed SDK path buffer limit; other path queries return EINVAL. */
+long ps5_pathconf(const char *path, int name);
 
 /* The exported syslog takes no identity: opening the log changes nothing. */
 void ps5_openlog(const char *ident, int option, int facility);

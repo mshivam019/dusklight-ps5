@@ -1457,6 +1457,12 @@ test_thread_stacks(void)
 static void
 test_posix(void)
 {
+   errno = 0;
+   check(ps5_pathconf("/", _PC_PATH_MAX) > 0, "pathconf returns the SDK path limit");
+   check(ps5_pathconf("/", -1) == -1 && errno == EINVAL, "pathconf rejects unknown queries");
+   check(ps5_pathconf("/no-such-ps5platform-path", _PC_PATH_MAX) == -1 && errno == ENOENT,
+         "pathconf rejects missing paths");
+   check(ps5_pathconf(NULL, _PC_PATH_MAX) == -1 && errno == EFAULT, "pathconf rejects null paths");
    int values[6] = {5, 3, 9, 1, 7, 2};
    int offset = 0;
    ps5_qsort_r(values, 6, sizeof(int), &offset, compare_offset);
