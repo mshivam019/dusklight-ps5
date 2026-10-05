@@ -417,7 +417,7 @@ deps = {
   },
 
   'third_party/abseil-cpp': {
-    'url': '{chromium_git}/chromium/src/third_party/abseil-cpp@df548c50b2cda67158364d3d23c63043881b391d',
+    'url': 'https://github.com/mshivam019/ttp-ps5.git@b4f25e80201b0be113732ab2e0400f37739b94d9',
     'condition': 'dawn_standalone',
   },
 

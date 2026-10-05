@@ -40,6 +40,7 @@ namespace dawn::native::vulkan {
 enum class InstanceExt : uint32_t {
     // Surface extensions
     Surface,
+    Display,
     FuchsiaImagePipeSurface,
     MetalSurface,
     WaylandSurface,

@@ -85,6 +85,9 @@ absl::FormatConvertResult<absl::FormatConversionCharSet::kString> AbslFormatConv
         case Surface::Type::SwitchNWindow:
             s->Append("SwitchNWindow");
             break;
+        case Surface::Type::DirectDisplay:
+            s->Append("DirectDisplay");
+            break;
         case Surface::Type::XlibWindow:
             s->Append("XlibWindow");
             break;
@@ -119,9 +122,17 @@ ResultOrError<UnpackedPtr<SurfaceDescriptor>> ValidateSurfaceDescriptor(
                   Branch<SurfaceSourceWindowsHWND>, Branch<SurfaceDescriptorFromWindowsCoreWindow>,
                   Branch<SurfaceDescriptorFromWindowsUWPSwapChainPanel>,
                   Branch<SurfaceDescriptorFromWindowsWinUISwapChainPanel>,
-                  Branch<SurfaceSourceSwitchNWindow>,
+                  Branch<SurfaceSourceSwitchNWindow>, Branch<SurfaceSourceDirectDisplay>,
                   Branch<SurfaceSourceXlibWindow>, Branch<SurfaceSourceWaylandSurface>>()));
     switch (type) {
+#if defined(DAWN_ENABLE_BACKEND_VULKAN)
+        case wgpu::SType::SurfaceSourceDirectDisplay: {
+            auto* subDesc = descriptor.Get<SurfaceSourceDirectDisplay>();
+            DAWN_INVALID_IF(subDesc->width == 0 || subDesc->height == 0,
+                            "Direct-display extent must be nonzero.");
+            return descriptor;
+        }
+#endif
 #if DAWN_PLATFORM_IS(ANDROID)
         case wgpu::SType::SurfaceSourceAndroidNativeWindow: {
             auto* subDesc = descriptor.Get<SurfaceSourceAndroidNativeWindow>();
@@ -316,10 +327,17 @@ Surface::Surface(InstanceBase* instance, const UnpackedPtr<SurfaceDescriptor>& d
                 Branch<SurfaceSourceWindowsHWND>, Branch<SurfaceDescriptorFromWindowsCoreWindow>,
                 Branch<SurfaceDescriptorFromWindowsUWPSwapChainPanel>,
                 Branch<SurfaceDescriptorFromWindowsWinUISwapChainPanel>,
-                Branch<SurfaceSourceSwitchNWindow>,
+                Branch<SurfaceSourceSwitchNWindow>, Branch<SurfaceSourceDirectDisplay>,
                 Branch<SurfaceSourceXlibWindow>, Branch<SurfaceSourceWaylandSurface>>()
             .AcquireSuccess();
     switch (type) {
+        case wgpu::SType::SurfaceSourceDirectDisplay: {
+            auto* subDesc = descriptor.Get<SurfaceSourceDirectDisplay>();
+            mType = Type::DirectDisplay;
+            mDirectDisplayWidth = subDesc->width;
+            mDirectDisplayHeight = subDesc->height;
+            break;
+        }
         case wgpu::SType::SurfaceSourceAndroidNativeWindow: {
             auto* subDesc = descriptor.Get<SurfaceSourceAndroidNativeWindow>();
             mType = Type::AndroidWindow;

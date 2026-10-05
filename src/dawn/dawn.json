@@ -4009,6 +4009,16 @@
             {"name": "window", "type": "void", "annotation": "*"}
         ]
     },
+    "surface source direct display": {
+        "category": "structure",
+        "chained": "in",
+        "chain roots": ["surface descriptor"],
+        "tags": ["native"],
+        "members": [
+            {"name": "width", "type": "uint32_t"},
+            {"name": "height", "type": "uint32_t"}
+        ]
+    },
     "surface source xlib window": {
         "category": "structure",
         "chained": "in",
@@ -4097,6 +4107,7 @@
             {"value": 1, "name": "shader source SPIRV"},
             {"value": 2, "name": "shader source WGSL"},
             {"value": 3, "name": "render pass max draw count"},
+            {"value": 1000, "name": "surface source direct display", "tags": ["native"]},
             {"value": 4, "name": "surface source metal layer"},
             {"value": 5, "name": "surface source windows HWND"},
             {"value": 6, "name": "surface source xlib window"},

@@ -37,9 +37,9 @@
 #if DAWN_PLATFORM_IS(WINUWP)
 #include "src/dawn/common/WindowsUtils.h"
 #endif
-#elif DAWN_PLATFORM_IS(POSIX)
+#elif (DAWN_PLATFORM_IS(POSIX) && !DAWN_PLATFORM_IS(PS5))
 #include <dlfcn.h>
-#elif DAWN_PLATFORM_IS(SWITCH)
+#elif (DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5))
 #else
 #error "Unsupported platform for DynamicLib"
 #endif
@@ -126,16 +126,16 @@ bool DynamicLib::Open(const std::string& filename, std::string* error) {
         *error =
             "DynamicLib.Open: " + filename + " Windows Error: " + std::to_string(GetLastError());
     }
-#elif DAWN_PLATFORM_IS(POSIX)
+#elif (DAWN_PLATFORM_IS(POSIX) && !DAWN_PLATFORM_IS(PS5))
     mHandle = dlopen(filename.c_str(), RTLD_NOW);
 
     if (mHandle == nullptr && error != nullptr) {
         *error = dlerror();
     }
-#elif DAWN_PLATFORM_IS(SWITCH)
+#elif (DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5))
     (void)filename;
     if (error != nullptr) {
-        *error = "Dynamic library loading is unavailable on Switch";
+        *error = "Dynamic library loading is unavailable on this platform";
     }
     mHandle = nullptr;
 #else
@@ -156,16 +156,16 @@ bool DynamicLib::OpenLoaded(const std::string& filename, std::string* error) {
         *error = "DynamicLib.OpenLoaded: " + filename +
                  " Windows Error: " + std::to_string(GetLastError());
     }
-#elif DAWN_PLATFORM_IS(POSIX)
+#elif (DAWN_PLATFORM_IS(POSIX) && !DAWN_PLATFORM_IS(PS5))
     mHandle = dlopen(filename.c_str(), RTLD_NOW | RTLD_NOLOAD);
 
     if (mHandle == nullptr && error != nullptr) {
         *error = dlerror();
     }
-#elif DAWN_PLATFORM_IS(SWITCH)
+#elif (DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5))
     (void)filename;
     if (error != nullptr) {
-        *error = "Dynamic library loading is unavailable on Switch";
+        *error = "Dynamic library loading is unavailable on this platform";
     }
     mHandle = nullptr;
 #else
@@ -203,9 +203,9 @@ void DynamicLib::Close() {
         // In ASAN builds, we have to leak the DLL instead in case it gets loaded again later.
         FreeLibrary(static_cast<HMODULE>(mHandle));
 #endif
-#elif DAWN_PLATFORM_IS(POSIX)
+#elif (DAWN_PLATFORM_IS(POSIX) && !DAWN_PLATFORM_IS(PS5))
         dlclose(mHandle);
-#elif DAWN_PLATFORM_IS(SWITCH)
+#elif (DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5))
 #else
 #error "Unsupported platform for DynamicLib"
 #endif
@@ -224,13 +224,13 @@ void* DynamicLib::GetProc(const std::string& procName, std::string* error) const
     if (proc == nullptr && error != nullptr) {
         *error = "Windows Error: " + std::to_string(GetLastError());
     }
-#elif DAWN_PLATFORM_IS(POSIX)
+#elif (DAWN_PLATFORM_IS(POSIX) && !DAWN_PLATFORM_IS(PS5))
     proc = reinterpret_cast<void*>(dlsym(mHandle, procName.c_str()));
 
     if (proc == nullptr && error != nullptr) {
         *error = dlerror();
     }
-#elif DAWN_PLATFORM_IS(SWITCH)
+#elif (DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5))
     (void)procName;
     if (error != nullptr) {
         *error = "Dynamic symbol lookup is unavailable on Switch";

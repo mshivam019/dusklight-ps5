@@ -96,6 +96,10 @@
 #define DAWN_PLATFORM_IS_POSIX 1
 #include <emscripten/emscripten.h>
 
+#elif defined(__PROSPERO__)
+#define DAWN_PLATFORM_IS_PS5 1
+#define DAWN_PLATFORM_IS_POSIX 1
+
 #elif defined(__SWITCH__)
 #define DAWN_PLATFORM_IS_SWITCH 1
 
@@ -244,6 +248,9 @@ static_assert(sizeof(sizeof(char)) == 4, "Expect sizeof(size_t) == 4");
 #endif
 #if !defined(DAWN_PLATFORM_IS_EMSCRIPTEN)
 #define DAWN_PLATFORM_IS_EMSCRIPTEN 0
+#endif
+#if !defined(DAWN_PLATFORM_IS_PS5)
+#define DAWN_PLATFORM_IS_PS5 0
 #endif
 #if !defined(DAWN_PLATFORM_IS_SWITCH)
 #define DAWN_PLATFORM_IS_SWITCH 0

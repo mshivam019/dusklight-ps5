@@ -86,8 +86,11 @@ class Surface final : public ErrorMonad {
         WindowsWinUISwapChainPanel,
         SwitchNWindow,
         XlibWindow,
+        DirectDisplay,
     };
     Type GetType() const;
+    uint32_t GetDirectDisplayWidth() const { return mDirectDisplayWidth; }
+    uint32_t GetDirectDisplayHeight() const { return mDirectDisplayHeight; }
     InstanceBase* GetInstance() const;
     DeviceBase* GetCurrentDevice() const;
 
@@ -143,6 +146,8 @@ class Surface final : public ErrorMonad {
 
     Ref<InstanceBase> mInstance;
     Type mType = Type::Undefined;
+    uint32_t mDirectDisplayWidth = 0;
+    uint32_t mDirectDisplayHeight = 0;
     std::string mLabel;
 
     // The surface has an associated device *if and only if* it is configured.

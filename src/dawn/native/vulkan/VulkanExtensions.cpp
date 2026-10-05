@@ -42,6 +42,7 @@ static constexpr size_t kInstanceExtCount = static_cast<size_t>(InstanceExt::Enu
 static constexpr std::array<InstanceExtInfo, kInstanceExtCount> sInstanceExtInfos{{
     // Not promoted to core in any version
     {InstanceExt::Surface, "VK_KHR_surface"},
+    {InstanceExt::Display, "VK_KHR_display"},
     {InstanceExt::FuchsiaImagePipeSurface, "VK_FUCHSIA_imagepipe_surface"},
     {InstanceExt::MetalSurface, "VK_EXT_metal_surface"},
     {InstanceExt::WaylandSurface, "VK_KHR_wayland_surface"},
@@ -96,6 +97,7 @@ InstanceExtSet EnsureDependencies(const InstanceExtSet& advertisedExts) {
                 hasDependencies = true;
                 break;
 
+            case InstanceExt::Display:
             case InstanceExt::AndroidSurface:
             case InstanceExt::FuchsiaImagePipeSurface:
             case InstanceExt::MetalSurface:

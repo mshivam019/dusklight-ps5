@@ -35,7 +35,7 @@
 
 namespace dawn::native::vulkan {
 
-#if DAWN_PLATFORM_IS(SWITCH)
+#if DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5)
 extern "C" {
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_icdGetInstanceProcAddr(VkInstance instance, const char* pName);
 }
@@ -95,7 +95,7 @@ F AsVkFn(void(VKAPI_PTR* addr)()) {
     } while (0)
 
 MaybeError VulkanFunctions::LoadGlobalProcs(const DynamicLib& vulkanLib) {
-#if DAWN_PLATFORM_IS(SWITCH)
+#if DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5)
     (void)vulkanLib;
     GetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(
         vk_icdGetInstanceProcAddr(VK_NULL_HANDLE, "vkGetInstanceProcAddr"));
@@ -180,6 +180,15 @@ MaybeError VulkanFunctions::LoadInstanceProcs(VkInstance instance,
         GET_INSTANCE_PROC(SetDebugUtilsObjectNameEXT);
         GET_INSTANCE_PROC(SetDebugUtilsObjectTagEXT);
         GET_INSTANCE_PROC(SubmitDebugUtilsMessageEXT);
+    }
+
+    if (globalInfo.HasExt(InstanceExt::Display)) {
+        GET_INSTANCE_PROC(GetPhysicalDeviceDisplayPropertiesKHR);
+        GET_INSTANCE_PROC(GetDisplayModePropertiesKHR);
+        GET_INSTANCE_PROC(GetPhysicalDeviceDisplayPlanePropertiesKHR);
+        GET_INSTANCE_PROC(GetDisplayPlaneSupportedDisplaysKHR);
+        GET_INSTANCE_PROC(GetDisplayPlaneCapabilitiesKHR);
+        GET_INSTANCE_PROC(CreateDisplayPlaneSurfaceKHR);
     }
 
     if (globalInfo.HasExt(InstanceExt::Surface)) {
@@ -408,25 +417,25 @@ MaybeError VulkanFunctions::LoadDeviceProcs(VkInstance instance,
     GET_DEVICE_PROC_ALIAS(BindImageMemory2, BindImageMemory2KHR);
     GET_DEVICE_PROC_ALIAS(CmdDispatchBase, CmdDispatchBaseKHR);
     GET_DEVICE_PROC_ALIAS(CmdSetDeviceMask, CmdSetDeviceMaskKHR);
-#if DAWN_PLATFORM_IS(SWITCH)
+#if DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5)
     GET_DEVICE_PROC_ALIAS_NO_ERROR(CreateDescriptorUpdateTemplate,
                                    CreateDescriptorUpdateTemplateKHR);
 #else
     GET_DEVICE_PROC_ALIAS(CreateDescriptorUpdateTemplate, CreateDescriptorUpdateTemplateKHR);
 #endif
-#if DAWN_PLATFORM_IS(SWITCH)
+#if DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5)
     GET_DEVICE_PROC_ALIAS_NO_ERROR(CreateSamplerYcbcrConversion,
                                    CreateSamplerYcbcrConversionKHR);
 #else
     GET_DEVICE_PROC_ALIAS(CreateSamplerYcbcrConversion, CreateSamplerYcbcrConversionKHR);
 #endif
-#if DAWN_PLATFORM_IS(SWITCH)
+#if DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5)
     GET_DEVICE_PROC_ALIAS_NO_ERROR(DestroyDescriptorUpdateTemplate,
                                    DestroyDescriptorUpdateTemplateKHR);
 #else
     GET_DEVICE_PROC_ALIAS(DestroyDescriptorUpdateTemplate, DestroyDescriptorUpdateTemplateKHR);
 #endif
-#if DAWN_PLATFORM_IS(SWITCH)
+#if DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5)
     GET_DEVICE_PROC_ALIAS_NO_ERROR(DestroySamplerYcbcrConversion,
                                    DestroySamplerYcbcrConversionKHR);
 #else
@@ -439,7 +448,7 @@ MaybeError VulkanFunctions::LoadDeviceProcs(VkInstance instance,
     GET_DEVICE_PROC_ALIAS(GetImageMemoryRequirements2, GetImageMemoryRequirements2KHR);
     GET_DEVICE_PROC_ALIAS(GetImageSparseMemoryRequirements2, GetImageSparseMemoryRequirements2KHR);
     GET_DEVICE_PROC_ALIAS(TrimCommandPool, TrimCommandPoolKHR);
-#if DAWN_PLATFORM_IS(SWITCH)
+#if DAWN_PLATFORM_IS(SWITCH) || DAWN_PLATFORM_IS(PS5)
     GET_DEVICE_PROC_ALIAS_NO_ERROR(UpdateDescriptorSetWithTemplate,
                                    UpdateDescriptorSetWithTemplateKHR);
 #else

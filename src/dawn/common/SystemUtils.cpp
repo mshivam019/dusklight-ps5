@@ -161,6 +161,10 @@ std::optional<std::string> GetExecutablePath() {
 std::optional<std::string> GetExecutablePath() {
     return {};
 }
+#elif DAWN_PLATFORM_IS(PS5)
+std::optional<std::string> GetExecutablePath() {
+    return "/app0/eboot.bin";
+}
 #elif DAWN_PLATFORM_IS(SWITCH)
 std::optional<std::string> GetExecutablePath() {
     return {};
@@ -218,6 +222,11 @@ std::optional<std::string> GetModulePath() {
 #elif DAWN_PLATFORM_IS(EMSCRIPTEN)
 std::optional<std::string> GetModulePath() {
     return {};
+}
+#elif DAWN_PLATFORM_IS(PS5)
+std::optional<std::string> GetModulePath() {
+    // Dawn is statically linked into the title.
+    return GetExecutablePath();
 }
 #elif DAWN_PLATFORM_IS(SWITCH)
 std::optional<std::string> GetModulePath() {

@@ -130,6 +130,14 @@ struct VulkanFunctions {
     VkFn<PFN_vkGetPhysicalDeviceSparseImageFormatProperties2>
         GetPhysicalDeviceSparseImageFormatProperties2 = nullptr;
 
+    // VK_KHR_display, for native titles without a window system.
+    VkFn<PFN_vkGetPhysicalDeviceDisplayPropertiesKHR> GetPhysicalDeviceDisplayPropertiesKHR = nullptr;
+    VkFn<PFN_vkGetDisplayModePropertiesKHR> GetDisplayModePropertiesKHR = nullptr;
+    VkFn<PFN_vkGetPhysicalDeviceDisplayPlanePropertiesKHR> GetPhysicalDeviceDisplayPlanePropertiesKHR = nullptr;
+    VkFn<PFN_vkGetDisplayPlaneSupportedDisplaysKHR> GetDisplayPlaneSupportedDisplaysKHR = nullptr;
+    VkFn<PFN_vkGetDisplayPlaneCapabilitiesKHR> GetDisplayPlaneCapabilitiesKHR = nullptr;
+    VkFn<PFN_vkCreateDisplayPlaneSurfaceKHR> CreateDisplayPlaneSurfaceKHR = nullptr;
+
     // VK_EXT_debug_utils
     VkFn<PFN_vkCmdBeginDebugUtilsLabelEXT> CmdBeginDebugUtilsLabelEXT = nullptr;
     VkFn<PFN_vkCmdEndDebugUtilsLabelEXT> CmdEndDebugUtilsLabelEXT = nullptr;

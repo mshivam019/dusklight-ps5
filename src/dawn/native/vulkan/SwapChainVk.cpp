@@ -605,6 +605,63 @@ ResultOrError<VkSurfaceKHR> CreateVulkanSurface(InstanceBase* instance,
     [[maybe_unused]] VkInstance vkInstance = physicalDevice->GetVulkanInstance()->GetVkInstance();
 
     switch (surface->GetType()) {
+        case Surface::Type::DirectDisplay: {
+            DAWN_INVALID_IF(!info.HasExt(InstanceExt::Display), "VK_KHR_display is unavailable.");
+            const VkPhysicalDevice gpu = physicalDevice->GetVkPhysicalDevice();
+            uint32_t count = 0;
+            DAWN_TRY(CheckVkSuccess(fn.GetPhysicalDeviceDisplayPropertiesKHR(gpu, &count, nullptr), "Display count"));
+            DAWN_INVALID_IF(count == 0, "No Vulkan displays.");
+            std::vector<VkDisplayPropertiesKHR> displays(count);
+            DAWN_TRY(CheckVkSuccess(fn.GetPhysicalDeviceDisplayPropertiesKHR(gpu, &count, displays.data()), "Displays"));
+            ::VkDisplayKHR display = VK_NULL_HANDLE;
+            ::VkDisplayModeKHR mode = VK_NULL_HANDLE;
+            uint32_t refresh = 0;
+            for (const auto& candidate : displays) {
+                uint32_t modeCount = 0;
+                DAWN_TRY(CheckVkSuccess(fn.GetDisplayModePropertiesKHR(gpu, candidate.display, &modeCount, nullptr), "Mode count"));
+                std::vector<VkDisplayModePropertiesKHR> modes(modeCount);
+                DAWN_TRY(CheckVkSuccess(fn.GetDisplayModePropertiesKHR(gpu, candidate.display, &modeCount, modes.data()), "Modes"));
+                for (const auto& m : modes) {
+#if DAWN_PLATFORM_IS(PS5)
+                    fprintf(stderr, "[Dawn PS5] Display mode: %u x %u, %u mHz\n", m.parameters.visibleRegion.width, m.parameters.visibleRegion.height, m.parameters.refreshRate);
+#endif
+                    if (m.parameters.visibleRegion.width == surface->GetDirectDisplayWidth() &&
+                        m.parameters.visibleRegion.height == surface->GetDirectDisplayHeight() &&
+                        m.parameters.refreshRate <= 61000 && m.parameters.refreshRate > refresh) {
+                        display = candidate.display; mode = m.displayMode; refresh = m.parameters.refreshRate;
+                    }
+                }
+            }
+            DAWN_INVALID_IF(mode == VK_NULL_HANDLE, "No direct-display mode matches the requested extent at 60 Hz.");
+            uint32_t planeCount = 0;
+            DAWN_TRY(CheckVkSuccess(fn.GetPhysicalDeviceDisplayPlanePropertiesKHR(gpu, &planeCount, nullptr), "Plane count"));
+            std::vector<VkDisplayPlanePropertiesKHR> planes(planeCount);
+            DAWN_TRY(CheckVkSuccess(fn.GetPhysicalDeviceDisplayPlanePropertiesKHR(gpu, &planeCount, planes.data()), "Planes"));
+            for (uint32_t plane = 0; plane < planeCount; ++plane) {
+                if (planes[plane].currentDisplay && planes[plane].currentDisplay != display) continue;
+                uint32_t supportedCount = 0;
+                DAWN_TRY(CheckVkSuccess(fn.GetDisplayPlaneSupportedDisplaysKHR(gpu, plane, &supportedCount, nullptr), "Plane display count"));
+                std::vector<::VkDisplayKHR> supported(supportedCount);
+                DAWN_TRY(CheckVkSuccess(fn.GetDisplayPlaneSupportedDisplaysKHR(gpu, plane, &supportedCount, supported.data()), "Plane displays"));
+                if (std::find(supported.begin(), supported.end(), display) == supported.end()) continue;
+                VkDisplayPlaneCapabilitiesKHR caps{};
+                DAWN_TRY(CheckVkSuccess(fn.GetDisplayPlaneCapabilitiesKHR(gpu, mode, plane, &caps), "Plane capabilities"));
+                if (!(caps.supportedAlpha & VK_DISPLAY_PLANE_ALPHA_OPAQUE_BIT_KHR)) continue;
+                VkDisplaySurfaceCreateInfoKHR createInfo{};
+                createInfo.sType = VK_STRUCTURE_TYPE_DISPLAY_SURFACE_CREATE_INFO_KHR;
+                createInfo.displayMode = mode; createInfo.planeIndex = plane;
+                createInfo.planeStackIndex = planes[plane].currentStackIndex;
+                createInfo.transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+                createInfo.globalAlpha = 1.0f;
+                createInfo.alphaMode = VK_DISPLAY_PLANE_ALPHA_OPAQUE_BIT_KHR;
+                createInfo.imageExtent = {surface->GetDirectDisplayWidth(), surface->GetDirectDisplayHeight()};
+                VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
+                DAWN_TRY(CheckVkSuccess(fn.CreateDisplayPlaneSurfaceKHR(vkInstance, &createInfo, nullptr, &*vkSurface), "Direct display surface"));
+                return vkSurface;
+            }
+            return DAWN_VALIDATION_ERROR("No supported direct-display plane.");
+        }
+
 #if defined(DAWN_ENABLE_BACKEND_METAL)
         case Surface::Type::MetalLayer:
             if (info.HasExt(InstanceExt::MetalSurface)) {
