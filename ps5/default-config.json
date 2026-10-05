@@ -1,0 +1,13 @@
+{
+  "game.enableFrameInterpolation": 1,
+  "video.maxFrameRate": 60,
+  "game.enableFpsOverlay": false,
+  "game.enableControllerToasts": false,
+  "game.enableTextureReplacements": true,
+  "game.internalResolutionScale": 0,
+  "backend.showPipelineCompilation": false,
+  "backend.skipPreLaunchUI": true,
+  "backend.checkForUpdates": false,
+  "backend.checkForModUpdates": false,
+  "video.uiScale": 200
+}

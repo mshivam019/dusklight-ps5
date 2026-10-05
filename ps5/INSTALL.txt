@@ -1,0 +1,33 @@
+Dusklight for PS5
+
+Requires a jailbroken PS5 with a compatible native-title loader.
+Tested on firmware 9.00 using kstuff and ShadowMount. No game dump or texture pack is included.
+
+1. Extract the ZIP. The title is output/PPSA99640.
+2. Add your own USA GameCube raw ISO as output/PPSA99640/game.iso.
+   The tested disc is GZ2E01 revision 0. Wii/RVZ/other regions are not verified by this initial PS5 build.
+3. Close the title before installing or updating. Preserve the existing user/ folder and game.iso.
+4. Upload the complete title folder to /mnt/ext1/etaHEN/games/PPSA99640 with any FTP client.
+   Linux/macOS: bash tools/install.sh --src output/PPSA99640 --console <console-ip>
+   Windows: powershell -ExecutionPolicy Bypass -File tools/install.ps1 -Src output/PPSA99640 -Console <console-ip>
+   The helpers require Python 3 and preserve an existing user/config.json.
+5. Register/mount the folder with your native-title launcher or PS5 Upload, then launch it.
+
+Controls: Cross=A, Circle=B, Square=X, Triangle=Y, Options=Start.
+Touchpad opens Dusklight settings. Sticks control movement/camera; L2/R2 are triggers.
+The first player's controller follows the game user. Existing other console users are not reassigned.
+
+Defaults: automatic internal resolution, 4K output on the tested display, 60 FPS frame interpolation,
+200% Dusklight menu scale, no FPS/controller/shader-compilation launch overlays.
+Interpolation does not change the original game simulation rate.
+
+Optional HD textures and PlayStation prompts:
+Download the PC pack and controller addon from:
+https://www.henrikomagnifico.com/zelda-twilight-princess-4k
+Install Pillow in your Python environment, then run:
+python tools/prepare-textures.py --pack <pack.zip> --buttons <addon.zip> --out <new-folder>
+Copy the prepared folder beneath PPSA99640/user/texture_replacements/ while the title is closed.
+The PC addon requires no ASTC decoder. The mobile addon requires --astcenc <host-decoder>.
+Do not include downloaded/converted texture packs in public releases without the author's permission.
+
+Read LEGAL.txt and the included license notices. Corresponding source accompanies the GitHub release.

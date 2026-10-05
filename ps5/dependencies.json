@@ -1,0 +1,50 @@
+{
+  "aurora": {
+    "repository": "https://github.com/mshivam019/dusklight-ps5.git",
+    "revision": "e281999cdb4fee6127525a9a9e97979480db4bf3"
+  },
+  "dawn": {
+    "repository": "https://github.com/mshivam019/dusklight-ps5.git",
+    "revision": "652a3104791369cd23605856fbc041375ccda875"
+  },
+  "sdl3": {
+    "repository": "https://github.com/mshivam019/dusklight-ps5.git",
+    "revision": "68159af2b34cc4fe5b3548faa89e87a69e4d2dce"
+  },
+  "abseil2024": {
+    "repository": "https://github.com/mshivam019/dusklight-ps5.git",
+    "revision": "5c695e68fcd3e7483ed300b6591d1ec49ae37cf4"
+  },
+  "sdk-platform": {
+    "repository": "https://github.com/mshivam019/dusklight-ps5.git",
+    "revision": "dade40735d912c339926a5ff98753fc60103d8fe"
+  },
+  "vulkan-runtime": {
+    "repository": "https://github.com/mshivam019/dusklight-ps5.git",
+    "revision": "aa215f26e89d732c10dd4ef2bbc633d55013fdf2"
+  },
+  "base-sdk": {
+    "revision": "adc8dd795ada7bf696cd98748aae463a3970ffbb",
+    "note": "Prepared SDK binary toolchain; patched platform library and headers installed from sdk-platform."
+  },
+  "mesa": {
+    "repository": "https://github.com/mihawk-99/PS5_Mesa.git",
+    "revision": "0b2d6d1a61d9bbf89cf8beb88a696144f67c61f8"
+  },
+  "radv": {
+    "sdk_revision": "95c08f27386fc698f6bbe21dde3030140a41d10b",
+    "sha256": "82344c546bc9961890bcdc1c3573d119957c03f261440f04a60eb635862fdcdd"
+  },
+  "runtime": {
+    "sha256": "e6ff45d16adf687855cc3b33b0c8a4132b6504360b221e0a34c7e99fb3ba0036"
+  },
+  "astc-decoder": {
+    "repository": "https://github.com/ARM-software/astc-encoder.git",
+    "revision": "9fbec68053d507023bb30e2a449f900a915882b9"
+  },
+  "llvm-runtime": {
+    "version": "18.1.8",
+    "source": "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/llvm-project-18.1.8.src.tar.xz",
+    "sha256": "0b58557a6d32ceee97c8d533a59b9212d87e0fc4d2833924eb6c611247db2f2a"
+  }
+}

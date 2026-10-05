@@ -10,6 +10,10 @@ borealis_detect_version()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 project(dusklight LANGUAGES C CXX VERSION ${BOREALIS_APP_VERSION})
 
+if (PS5)
+    include(ps5/Platform.cmake)
+endif ()
+
 if (APPLE)
     enable_language(OBJC OBJCXX)
 endif ()
@@ -75,6 +79,9 @@ set(AURORA_ENABLE_CARD ON CACHE BOOL "Enable CARD API support" FORCE)
 set(AURORA_ENABLE_THP ON CACHE BOOL "Enable THP decoder" FORCE)
 set(AURORA_ENABLE_RMLUI ON CACHE BOOL "Enable RmlUi UI support" FORCE)
 add_subdirectory(extern/aurora EXCLUDE_FROM_ALL)
+if (PS5)
+    target_sources(aurora_core PRIVATE ps5/input.cpp ps5/native/platform.c)
+endif ()
 target_compile_definitions(aurora_mtx PRIVATE MTX_USE_PS=1)
 
 add_subdirectory(extern/borealis EXCLUDE_FROM_ALL)
@@ -370,6 +377,10 @@ target_precompile_headers(dusk_internal PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMA
 
 if(ANDROID)
     add_library(dusklight SHARED ${GAME_FILES} ${miniz_SOURCE_DIR}/miniz.c)
+elseif (PS5)
+    # Compile the game as an archive; native title packaging owns the final CRT,
+    # RADV link recipe and shell exit rather than the payload SDK's ELF linker.
+    add_library(dusklight STATIC ${GAME_FILES} ${miniz_SOURCE_DIR}/miniz.c)
 else ()
     add_executable(dusklight ${GAME_FILES} ${miniz_SOURCE_DIR}/miniz.c)
 endif ()
@@ -720,3 +731,8 @@ foreach (target IN LISTS BINARY_TARGETS)
 endforeach ()
 
 install_bundled_mods()
+
+if (PS5 AND TARGET libzstd_static)
+    # Native SELF imports cannot represent absent optional weak trace hooks.
+    target_compile_definitions(libzstd_static PRIVATE ZSTD_TRACE=0)
+endif ()

@@ -535,7 +535,11 @@ void update() noexcept {
 }
 
 std::filesystem::path resource_path(const std::filesystem::path& filename) noexcept {
+#ifdef __PROSPERO__
+    return std::filesystem::path("/app0/res") / filename;
+#else
     return std::filesystem::path("res") / filename;
+#endif
 }
 
 std::string escape(std::string_view str) noexcept {

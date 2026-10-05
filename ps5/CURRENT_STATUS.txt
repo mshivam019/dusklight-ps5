@@ -1,0 +1,57 @@
+Twilight Princess PS5, October 6, 2026
+
+Base: Dusklight v2.0.3. Native title PPSA99640, Twilight Princess.
+The private source repo contains the application and pinned dependency branches.
+Game images, textures, saves, console logs and credentials stay outside Git.
+
+Verified:
+- Native game launches on firmware 9.00 using the existing kstuff/ShadowMount stack.
+- User confirmed reaching gameplay, moving Link and creating a save.
+- Native stereo audio and separate-user ScePad input integrated through SDL3.
+- Cross=A, Circle=B, Square=X, Triangle=Y; Options=Start; touchpad opens settings.
+- Native Vulkan display surface is 3840x2160 at 59.94 Hz.
+- 300-frame presentation samples measure 59.94-60 FPS in the tested scene.
+- 60 FPS interpolation enabled; this does not change the original simulation rate.
+- Henriko 4.0d 4K pack installed separately, with PlayStation prompts converted
+  from unsupported ASTC to PNG. Source ZIP CRC and all remote file sizes checked.
+- User confirmed HD visuals and PlayStation prompts look right and gameplay is smooth.
+- SDK platform host tests passed 324/324, plus descriptor/elevation checks.
+- Bounded raw GameCube reader passed malformed-image ASan/UBSan tests.
+- Native link passes missing-import guard and SELF inspection.
+
+Limits:
+- The current renderer is native Dawn over Vulkan/RADV. The earlier direct
+  Vulkan UI proof is preserved; a full direct Vulkan Aurora renderer is future work.
+- Current display mode supports 60 Hz. Visible 120 FPS is not verified.
+- No whole-game performance or compatibility claim; gyro is not implemented.
+- Texture-thumbnail alignment warnings occur for some compressed mip levels.
+  Full-size replacements load; user reports correct visuals. Five unaligned
+  base textures have PNG replacements installed during the closed-title update.
+- Code mods are disabled in this initial native build.
+
+Build:
+- ps5/dependencies.json records the private dependency revisions.
+- ps5/BUILD.md describes prepared-dependency configuration and native linking.
+- ps5/tools/build-native-game.py successfully rebuilt and inspected the SELF.
+- validate.py checks source hygiene, disc bounds under ASan/UBSan, runtime/driver
+  hashes and native SELF validity. Package validation checks release contents.
+- Native SDL3/Dawn/game build script and synthetic/native validation checks passed.
+- Windows/Linux packages and corresponding-source scripts are available under ps5/tools/.
+
+Console receipts, original executable/config backups and graphics-probe backups
+remain outside this repository. Preserve user/ and game.iso during updates.
+
+Quiet launch update:
+- FPS counter, controller-connected toast, shader-compilation overlay and
+  pre-launch menu disabled in the console config, with a rollback copy retained.
+- Desktop app/mod update checks disabled for the private PS5 build.
+- The touchpad continues to open settings; diagnostic FPS remains in logs only.
+- The TG placeholder tile icon was replaced with the upstream Dusklight Midna
+  icon, adapted to the native 512x512 RGB format.
+- Dusklight UI scale set to 200% for the 4K display, enlarging the touchpad
+  menu and top bar without changing game HUD scale.
+
+Release preparation:
+- Private repository renamed to mshivam019/dusklight-ps5.
+- prepare-textures.py passed with the downloaded PC pack and PlayStation addon.
+- No game dump or texture pack is included in release archives.

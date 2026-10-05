@@ -53,3 +53,13 @@ compile_commands.json
 pipeline_cache.bin
 
 extract
+
+# PS5 local dependencies and private disc images
+.deps/
+*.iso
+*.gcm
+*.rvz
+*.wbfs
+
+# Native title packages and user test data
+/dist/

@@ -708,6 +708,15 @@ int game_main(int argc, char* argv[]) {
         config.pauseOnFocusLost = dusk::getSettings().game.pauseOnFocusLost;
         config.imGuiInitCallback = &aurora_imgui_init_callback;
         config.allowTextureDumps = false;
+#ifdef __PROSPERO__
+        config.windowWidth = 3840;
+        config.windowHeight = 2160;
+        config.startFullscreen = false;
+        config.pauseOnFocusLost = false;
+        config.resourcesPath = "/app0/";
+        config.cachePath = "/app0/user/cache";
+        config.desiredBackend = BACKEND_VULKAN;
+#endif
         auroraInfo = aurora_initialize(argc, argv, &config);
     }
 

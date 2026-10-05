@@ -1,0 +1,60 @@
+{
+  "AlegreyaSC-Bold.ttf": {
+    "0": "Copyright 2011 The Alegreya Project Authors (https://github.com/huertatipografica/Alegreya)",
+    "1": "Alegreya SC",
+    "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+    "14": "http://scripts.sil.org/OFL"
+  },
+  "AlegreyaSC-Regular.ttf": {
+    "0": "Copyright 2011 The Alegreya Project Authors (https://github.com/huertatipografica/Alegreya)",
+    "1": "Alegreya SC",
+    "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+    "14": "http://scripts.sil.org/OFL"
+  },
+  "FiraSans-Bold.ttf": {
+    "0": "Digitized data copyright 2012-2016, The Mozilla Foundation and Telefonica S.A.",
+    "1": "Fira Sans",
+    "13": "Licensed under the Open Font License, version 1.1 or later",
+    "14": "http://scripts.sil.org/OFL"
+  },
+  "FiraSans-Regular.ttf": {
+    "0": "Digitized data copyright 2012-2016, The Mozilla Foundation and Telefonica S.A.",
+    "1": "Fira Sans",
+    "13": "Licensed under the Open Font License, version 1.1 or later",
+    "14": "http://scripts.sil.org/OFL"
+  },
+  "FiraSansCondensed-Bold.ttf": {
+    "0": "Digitized data copyright 2012-2016, The Mozilla Foundation and Telefonica S.A.",
+    "1": "Fira Sans Condensed",
+    "13": "Licensed under the Open Font License, version 1.1 or later",
+    "14": "http://scripts.sil.org/OFL"
+  },
+  "FiraSansCondensed-Regular.ttf": {
+    "0": "Digitized data copyright 2012-2016, The Mozilla Foundation and Telefonica S.A.",
+    "1": "Fira Sans Condensed",
+    "13": "Licensed under the Open Font License, version 1.1 or later",
+    "14": "http://scripts.sil.org/OFL"
+  },
+  "Inter-Bold.ttf": {
+    "0": "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)",
+    "1": "Inter",
+    "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+    "14": "https://openfontlicense.org"
+  },
+  "Inter-Regular.ttf": {
+    "0": "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)",
+    "1": "Inter",
+    "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+    "14": "https://openfontlicense.org"
+  },
+  "MaterialSymbolsRounded-Regular.ttf": {
+    "0": "Copyright 2026 Google LLC.  All Rights Reserved.",
+    "1": "Material Symbols Rounded"
+  },
+  "NotoMono-Regular.ttf": {
+    "0": "Copyright 2007 Google Inc. All Rights Reserved.",
+    "1": "Noto Mono",
+    "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.",
+    "14": "http://scripts.sil.org/OFL"
+  }
+}

@@ -1,56 +1,76 @@
-<div align="center">
-  <img src="res/logo.png" alt="Logo" width="640">
+# Dusklight for PS5
 
-  <p align="center">
-    <a href="https://twilitrealm.dev">Official Website</a>
-    •
-    <a href="https://discord.gg/6NpMhefCK9">Discord</a>
-  </p>
-</div>
+A native PS5 port of [Dusklight](https://github.com/TwilitRealm/dusklight), based on v2.0.3.
+The tested build reaches playable gameplay with working controller input and saves.
 
-# Overview
+## Download and install
 
-Dusklight is a reverse-engineered reimplementation of Twilight Princess.
+Get the Windows or Linux ZIP from [Releases](https://github.com/mshivam019/dusklight-ps5/releases).
+The console title is the same in both; only the upload helper differs.
 
-It aims to be as accurate as possible to the original while also providing new options, enhancements, and tools to customize your experience.
+No game dump, HD texture pack, saves, console firmware or keys are included.
+Supply a dump of your own legally obtained game. The initial PS5 build is tested
+with the USA GameCube disc, GZ2E01 revision 0, as a raw `game.iso`.
 
-> [!IMPORTANT]
-> Dusklight's official website is https://twilitrealm.dev/, any other website is not affiliated and may be promoting AI-generated misinformation.
+Extract the ZIP, add `game.iso` beside `eboot.bin` in `output/PPSA99640`, and upload
+that folder to your native-title location. Register it with your normal launcher
+or PS5 Upload. See [installation instructions](ps5/INSTALL.txt).
+Close the title before updates and preserve `user/`, which contains saves and settings.
 
-# Setup
+## Features and testing
 
-> [!IMPORTANT]
-> Dusklight does *not* provide any copyrighted assets. You must provide your own copy of the original game.
+- Native Vulkan/RADV rendering through Dawn, stereo audio and PS5 controller input.
+- 3840x2160 output at about 59.94 FPS in the measured scenes, using frame interpolation.
+- Character movement and save creation confirmed in console testing on firmware 9.00.
+- Touchpad opens settings, with 200% menu scale for the tested 4K display.
+- Cross=A, Circle=B, Square=X, Triangle=Y and Options=Start.
+- Quiet launch: FPS counter, controller-connected toast and shader-compilation overlay disabled.
+- Optional HD textures and PlayStation prompts, prepared from your own downloads.
 
-> [!IMPORTANT]
-> At a minimum, Dusklight requires a GPU with support for D3D12, Vulkan 1.1+, or Metal. For older devices, best-effort support is provided for D3D11 and OpenGL ES (Android), but will not achieve full accuracy or performance. Your experience with specific hardware, operating systems, and drivers may vary.
+The original simulation remains at its original rate. Whole-game progression,
+all regions, gyro, code mods and 120 Hz output are not verified. Some compressed
+texture-thumbnail warnings remain; the tested full-size HD visuals look correct.
+See [tested status](ps5/CURRENT_STATUS.txt) for the current limits.
 
-### 1. Dump your game
+## Optional texture packs
 
-You must dump your own copy of the game. Please see [this article](https://wiki.dolphin-emu.org/index.php?title=Ripping_Games) for instructions. After dumping, you can use a program like [Dolphin](https://dolphin-emu.org/) or [nodtool](https://github.com/encounter/nod/releases) to convert the `.iso` to `.rvz` to save space.
+Download the PC pack and PlayStation UI addon from
+[Henriko Magnifico's official page](https://www.henrikomagnifico.com/zelda-twilight-princess-4k).
+Then use `ps5/tools/prepare-textures.py` to extract textures and prepare the prompts.
+It handles PC BC7 files directly and can convert mobile ASTC files with a host decoder.
+The textures stay separate from the release. See [build and texture instructions](ps5/BUILD.md).
 
-Dusklight currently supports all commercial discs except for Wii's Korean release.
+## Build and validate
 
-> [!NOTE]
-> Dusklight is based on the [Twilight Princess decompilation](https://github.com/zeldaret/tp), which is currently only matching for GameCube. As a result, even when playing Dusklight with a Wii disc, you will be presented with the GameCube version's HUD and certain other specificities.
+A Linux build host needs Python 3, Git, CMake, Ninja, Clang/LLVM, Make, Meson,
+rsync, wget and unzip. Rebuilding RADV also needs the host Mesa shader-tool dependencies.
+The repository is currently private, so dependency fetches require GitHub access.
+After it becomes public, the same pinned URLs can be fetched without that access.
 
-### 2. Install Dusklight
+```sh
+python3 ps5/tools/build.py --setup --build-radv
+python3 ps5/tools/validate.py
+python3 ps5/tools/package-release.py --version ps5-v0.1.0
+python3 ps5/tools/package-source.py --version ps5-v0.1.0
+```
 
-Visit the [official installation guide](https://twilitrealm.dev/install/) for full instructions.
+A prepared Vulkan tree can be supplied with `--vulkan-dir /path/to/PS5_Vulkan`.
+Dependency pins are in [ps5/dependencies.json](ps5/dependencies.json).
+The full SDL3/Dawn/game build script has passed using the prepared dependencies;
+a complete empty-machine RADV bootstrap has not yet been verified.
 
-# Building
+## Credits and licensing
 
-If you'd like to build Dusklight from source, please read the [build instructions](docs/building.md).
+Thanks to the Twilit Realm/Dusklight team, zeldaret's Twilight Princess decompilation
+contributors, Luke Street and the Aurora/Borealis contributors, John Törnblom and
+ps5-payload-dev, Mihawk for the PS5 Vulkan/Mesa work, and BlackBearReloaded for the
+native runtime foundation. SDL, Dawn, Mesa, LLVM and the other dependency authors
+are credited in the packaged notices and corresponding source.
+Henriko Magnifico and contributors made the optional texture pack and controller addon.
 
-Pull requests are welcomed! Note that we do not accept contributions that are primarily AI-generated and will close your PR if we suspect as much. Please also see the [code conventions](docs/code-conventions.md).
-
-# Credits
-
-Special thanks to the [TP decompilation](https://github.com/zeldaret/tp) team, the GC/Wii decompilation community, the [Aurora](https://github.com/encounter/aurora) developers, the [TP speedrunning community](https://zsrtp.link), and all [contributors](https://github.com/TwilitRealm/dusklight/graphs/contributors).
-
-<br/>
-<div align="center">
-    <a href="https://github.com/encounter/aurora">
-        <img src="assets/aurora-powered.png" alt="Powered by Aurora" width="800">
-    </a>
-</div>
+Upstream Dusklight is CC0. The linked PS5 platform/runtime is GPL-3.0-or-later;
+other components retain their own licenses. Corresponding source accompanies releases.
+This is an independent port, not an official Twilit Realm release.
+Not affiliated with Nintendo or Sony Interactive Entertainment. PlayStation and PS5
+are trademarks of Sony Interactive Entertainment. Vulkan is a Khronos Group trademark;
+this RADV port is not a conformant Vulkan product.

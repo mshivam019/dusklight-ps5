@@ -253,8 +253,13 @@ std::optional<Site> lookup(void* runtimeTarget) {
 }
 
 void publish(const Site& site, void* trampoline) {
+#if defined(__PROSPERO__)
+    // libc++ 18 lacks atomic_ref. Clang provides the same atomic pointer store.
+    __atomic_store_n(site.slot, trampoline, __ATOMIC_RELEASE);
+#else
     std::atomic_ref slot{*site.slot};
     slot.store(trampoline, std::memory_order_release);
+#endif
 }
 
 }  // namespace dusk::mods::prepatch

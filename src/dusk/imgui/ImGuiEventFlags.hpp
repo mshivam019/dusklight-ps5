@@ -3266,8 +3266,8 @@ inline MultiByteAreaFlag ForestTempleMultiByteFlags[] =
 	}
 };
 
-inline const std::map<uint8_t, const char*> _SPRIceBlockPuzzleLocations = 
-{
+inline const std::map<uint8_t, const char*>& _SPRIceBlockPuzzleLocations() {
+    static const std::map<uint8_t, const char*> values = {
     { 0x00, "N/A"	   },
 	{ 0x0C, "(-2,  2)" },
     { 0x0B, "(-1,  2)" },
@@ -3301,6 +3301,8 @@ inline const std::map<uint8_t, const char*> _SPRIceBlockPuzzleLocations =
 
 	{ 0x01, "( 0, -3)" },
 };
+    return values;
+}
 
 inline MultiByteAreaFlag SPRMultiByteFlags[] = {
 	{
@@ -3346,21 +3348,22 @@ inline MultiByteAreaFlag SPRMultiByteFlags[] = {
 	{
 		"Ice Block 1 Location",
 		AreaFlagMultibit{0x0F1F},
-		_SPRIceBlockPuzzleLocations
+		_SPRIceBlockPuzzleLocations()
 	},
 	{
 		"Ice Block 2 Location",
 		AreaFlagMultibit{0x08F8},
-		_SPRIceBlockPuzzleLocations
+		_SPRIceBlockPuzzleLocations()
 	},
 	{
 		"Ice Block 3 Location",
 		AreaFlagMultibit{0x0807, 0x09C0},
-		_SPRIceBlockPuzzleLocations
+		_SPRIceBlockPuzzleLocations()
 	}
 };
 
-inline const std::map<uint8_t, const char*> _CoOBlockPuzzle1Locations = {
+inline const std::map<uint8_t, const char*>& _CoOBlockPuzzle1Locations() {
+    static const std::map<uint8_t, const char*> values = {
     { 0x00, "N/A"	   },
     { 0x0B, "(-1,  2)" },
     { 0x0C, "( 0,  2)" },
@@ -3382,8 +3385,11 @@ inline const std::map<uint8_t, const char*> _CoOBlockPuzzle1Locations = {
     { 0x06, "( 0, -2)" },
     { 0x05, "( 1, -2)" },
 };
+    return values;
+}
 
-inline const std::map<uint8_t, const char*> _CoOBlockPuzzle2Locations = {
+inline const std::map<uint8_t, const char*>& _CoOBlockPuzzle2Locations() {
+    static const std::map<uint8_t, const char*> values = {
     { 0x00, "N/A"	   },
     { 0x01, "(-1,  2)" },
     { 0x02, "( 0,  2)" },
@@ -3404,8 +3410,11 @@ inline const std::map<uint8_t, const char*> _CoOBlockPuzzle2Locations = {
     { 0x08, "( 1, -1)" },
     { 0x07, "( 2, -1)" },
 };
+    return values;
+}
 
-inline const std::map<uint8_t, const char*> _CoOBlockPuzzle3Locations = {
+inline const std::map<uint8_t, const char*>& _CoOBlockPuzzle3Locations() {
+    static const std::map<uint8_t, const char*> values = {
     { 0x00, "N/A"	   },
     { 0x01, "(-2,  2)" },
     { 0x02, "(-1,  2)" },
@@ -3437,52 +3446,54 @@ inline const std::map<uint8_t, const char*> _CoOBlockPuzzle3Locations = {
     { 0x0A, "( 1, -2)" },
     { 0x09, "( 2, -2)" },
 };
+    return values;
+}
 
 inline MultiByteAreaFlag CoOMultiByteFlags[] = {
 	{
 		"Puzzle 1 Block 1 Location",
 		AreaFlagMultibit{0x0907, 0x0A80},
-		_CoOBlockPuzzle1Locations
+		_CoOBlockPuzzle1Locations()
 	},
 	{
 		"Puzzle 1 Block 2 Location",
 		AreaFlagMultibit{0x0A3C},
-		_CoOBlockPuzzle1Locations
+		_CoOBlockPuzzle1Locations()
 	},
 	{
 		"Puzzle 1 Block 3 Location",
 		AreaFlagMultibit{0x0B0F},
-		_CoOBlockPuzzle1Locations
+		_CoOBlockPuzzle1Locations()
 	},
 	{
 		"Puzzle 2 Block 1 Location",
 		AreaFlagMultibit{0x08F0},
-		_CoOBlockPuzzle2Locations
+		_CoOBlockPuzzle2Locations()
 	},
 	{
 		"Puzzle 2 Block 2 Location",
 		AreaFlagMultibit{0x080F},
-		_CoOBlockPuzzle2Locations
+		_CoOBlockPuzzle2Locations()
 	},
 	{
 		"Puzzle 2 Block 3 Location",
 		AreaFlagMultibit{0x09F0},
-		_CoOBlockPuzzle2Locations
+		_CoOBlockPuzzle2Locations()
 	},
 	{
 		"Puzzle 3 Block 1 Location",
 		AreaFlagMultibit{0x0E7C},
-		_CoOBlockPuzzle3Locations
+		_CoOBlockPuzzle3Locations()
 	},
 	{
 		"Puzzle 3 Block 2 Location",
 		AreaFlagMultibit{0x0E03, 0x0FE0},
-		_CoOBlockPuzzle3Locations
+		_CoOBlockPuzzle3Locations()
 	},
 	{
 		"Puzzle 3 Block 3 Location",
 		AreaFlagMultibit{0x0F1F},
-		_CoOBlockPuzzle3Locations
+		_CoOBlockPuzzle3Locations()
 	}
 };
 
