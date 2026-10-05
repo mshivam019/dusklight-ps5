@@ -34,11 +34,19 @@ else ()
     set(ABSL_MSVC_STATIC_RUNTIME ON CACHE INTERNAL "Link static runtime libraries")
   endif()
   set(ABSL_PROPAGATE_CXX_STD ON)
-  FetchContent_Declare(abseil-cpp
-    URL https://github.com/abseil/abseil-cpp/archive/refs/tags/20240722.0.tar.gz
-    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
-    EXCLUDE_FROM_ALL
-  )
+  if (PS5)
+    FetchContent_Declare(abseil-cpp
+      GIT_REPOSITORY https://github.com/mshivam019/ttp-ps5.git
+      GIT_TAG 5c695e68fcd3e7483ed300b6591d1ec49ae37cf4
+      EXCLUDE_FROM_ALL
+    )
+  else ()
+    FetchContent_Declare(abseil-cpp
+      URL https://github.com/abseil/abseil-cpp/archive/refs/tags/20240722.0.tar.gz
+      DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+      EXCLUDE_FROM_ALL
+    )
+  endif ()
   FetchContent_MakeAvailable(abseil-cpp)
   if (NOT TARGET absl::flat_hash_map OR NOT TARGET absl::btree)
     message(FATAL_ERROR "Failed to make abseil-cpp available")
