@@ -32,6 +32,24 @@ all regions, gyro, code mods and 120 Hz output are not verified. Some compressed
 texture-thumbnail warnings remain; the tested full-size HD visuals look correct.
 See [tested status](ps5/CURRENT_STATUS.txt) for the current limits.
 
+## Controls and settings menu
+
+Press **Touchpad** to open the Dusklight settings menu during gameplay.
+This is where you configure the built-in graphics, gameplay and cheat options.
+
+| Control | Action |
+| --- | --- |
+| Touchpad | Open/toggle Dusklight settings |
+| D-pad or left stick | Navigate menu options |
+| Cross | Select or confirm |
+| Circle | Back or cancel |
+| L2 / R2 | Previous / next settings tab |
+| Options | Original game's Start menu |
+| Left / right stick during gameplay | Movement / camera |
+
+Face buttons use Cross=A, Circle=B, Square=X and Triangle=Y.
+Button bindings can be adjusted in the **Input** tab.
+
 ## Optional texture packs
 
 Download the PC pack and PlayStation UI addon from
@@ -39,6 +57,52 @@ Download the PC pack and PlayStation UI addon from
 Then use `ps5/tools/prepare-textures.py` to extract textures and prepare the prompts.
 It handles PC BC7 files directly and can convert mobile ASTC files with a host decoder.
 The textures stay separate from the release. See [build and texture instructions](ps5/BUILD.md).
+
+### Installing or changing a texture pack
+
+Close the game before copying files. Install Pillow on your computer, then prepare
+one pack in a new output folder:
+
+```sh
+python3 -m pip install Pillow
+python3 ps5/tools/prepare-textures.py --pack /path/to/pack.zip --buttons /path/to/playstation-addon.zip --out /path/to/prepared-pack
+```
+
+The button addon is optional; omit `--buttons` if you do not need it.
+Copy the prepared folder into the installed title's
+`PPSA99640/user/texture_replacements/`, preserving the texture filenames and folders.
+For example: `PPSA99640/user/texture_replacements/MyPack/tex1_....dds`.
+Use the original `tex1_...` filenames; renaming them prevents matching.
+The PC pack/addon is the tested preparation route. Mobile ASTC files need
+`--astcenc /path/to/host-decoder`.
+
+Launch the game, press **Touchpad**, open **Video**, and change
+**Enable Texture Replacements** to turn the installed HD textures on or off.
+To replace a pack, close the game and move the old pack folder out of
+`texture_replacements` before copying the new one. Avoid overlapping packs that
+replace the same textures. Preserve the rest of `user/`, especially your saves.
+
+Downloadable native **code mods are disabled in this PS5 release**. Dropping PC
+mod libraries or mod ZIPs into `user/mods` does not enable them. The built-in
+settings and cheats remain available through the Touchpad menu.
+
+## Languages
+
+The tested USA GameCube disc (GZ2E01 revision 0) provides **English only**.
+Changing the console language does not supply additional game text.
+Upstream Dusklight selects languages from the supplied disc's assets:
+
+| Disc region | Game text available upstream |
+| --- | --- |
+| USA GameCube | English |
+| European GameCube | English, German, French, Spanish, Italian |
+| Japanese GameCube | Japanese |
+
+European and Japanese discs have not been verified in this PS5 release.
+Upstream exposes the language selector in its pre-launch settings when the disc
+contains multiple languages. This release skips that screen by default.
+The Dusklight settings interface is currently in English; changing game text
+language does not translate it. Translation patches are not included.
 
 ## Build and validate
 
