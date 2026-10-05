@@ -1457,6 +1457,9 @@ test_thread_stacks(void)
 static void
 test_posix(void)
 {
+   struct stat native_status;
+   check(ps5_lstat("/", &native_status) == 0 && S_ISDIR(native_status.st_mode), "native lstat sees directories");
+   check(ps5_lstat("/no-such-ps5platform-path", &native_status) == -1 && errno == ENOENT, "native lstat reports missing paths");
    errno = 0;
    check(ps5_pathconf("/", _PC_PATH_MAX) > 0, "pathconf returns the SDK path limit");
    check(ps5_pathconf("/", -1) == -1 && errno == EINVAL, "pathconf rejects unknown queries");

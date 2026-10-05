@@ -309,3 +309,10 @@ long ps5_pathconf(const char *path, int name)
    errno = EINVAL;
    return -1;
 }
+
+/* Native titles cannot inspect links with lstat (EPERM), and this platform
+ * cannot create links. stat supplies metadata for the supported file types. */
+int ps5_lstat(const char *path, struct stat *status)
+{
+   return stat(path, status);
+}
