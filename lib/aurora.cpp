@@ -33,6 +33,7 @@
 
 #ifdef __PROSPERO__
 extern "C" void ps5_input_poll();
+extern "C" double now_seconds();
 #endif
 namespace aurora {
 AuroraConfig g_config;
@@ -390,6 +391,16 @@ void end_frame() noexcept {
         }
       }
       if (status) {
+#ifdef __PROSPERO__
+        static unsigned measuredFrames = 0;
+        static double measuredStart = now_seconds();
+        if (++measuredFrames == 300) {
+          const double elapsed = now_seconds() - measuredStart;
+          std::fprintf(stderr, "[Aurora PS5] Presented %u frames in %.3f s: %.2f FPS\n", measuredFrames, elapsed, measuredFrames / elapsed);
+          measuredFrames = 0;
+          measuredStart = now_seconds();
+        }
+#endif
         gfx::after_present();
       } else {
         Log.warn("Surface present failed");
