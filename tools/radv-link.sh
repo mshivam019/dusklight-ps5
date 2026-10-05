@@ -49,7 +49,7 @@ radv_link_recipe() {
             malloc_usable_size reallocf reallocarray getline getdelim; do
         radv_link_flags+=("--wrap=$name")
     done
-    for name in qsort_r mkstemps openlog popen pclose open_memstream __xuname __assert \
+    for name in lstat fork pathconf fchown gai_strerror getnameinfo isatty qsort_r mkstemps openlog popen pclose open_memstream __xuname __assert \
             __memset_chk regcomp regexec regfree regerror localtime_r newlocale freelocale \
             strtod_l strtof_l dladdr utimensat localeconv_l strtoll_l strtoull_l strtold_l \
             snprintf_l sscanf_l asprintf_l strcoll_l strxfrm_l strftime_l wcscoll_l wcsxfrm_l \
