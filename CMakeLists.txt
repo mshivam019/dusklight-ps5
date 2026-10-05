@@ -1329,6 +1329,13 @@ if(SDL_HAPTIC)
 endif()
 
 
+# Native PS5 output. The title's native link recipe supplies SceAudioOut.
+if(SDL_AUDIO AND PS5)
+  set(SDL_AUDIO_DRIVER_PS5 1)
+  set(HAVE_SDL_AUDIO TRUE)
+  sdl_glob_sources("${SDL3_SOURCE_DIR}/src/audio/ps5/*.c")
+endif()
+
 # General SDL subsystem options, valid for all platforms
 if(SDL_AUDIO)
   # CheckDummyAudio/CheckDiskAudio - valid for all platforms
@@ -1391,7 +1398,7 @@ if(UNIX OR APPLE OR HAIKU OR RISCOS)
 endif()
 
 if(SDL_JOYSTICK)
-  if(SDL_VIRTUAL_JOYSTICK)
+  if(SDL_VIRTUAL_JOYSTICK OR PS5)
     set(HAVE_VIRTUAL_JOYSTICK TRUE)
     set(SDL_JOYSTICK_VIRTUAL 1)
     sdl_glob_sources(
@@ -2067,7 +2074,7 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
   endif()
 
   if(SDL_JOYSTICK)
-    if(FREEBSD OR NETBSD OR OPENBSD OR BSDI)
+    if((FREEBSD OR NETBSD OR OPENBSD OR BSDI) AND NOT PS5)
       CheckUSBHID()
     endif()
     if((LINUX OR FREEBSD) AND HAVE_LINUX_INPUT_H AND NOT ANDROID)
@@ -3448,7 +3455,7 @@ if(WINDOWS)
   )
   set(SDL_PROCESS_WINDOWS 1)
   set(HAVE_SDL_PROCESS TRUE)
-elseif(NOT ANDROID)
+elseif(NOT ANDROID AND NOT PS5)
   check_c_source_compiles("
 #include <spawn.h>
 #include <unistd.h>

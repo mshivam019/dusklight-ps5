@@ -19,6 +19,7 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_internal.h"
+#if !defined(__PROSPERO__)
 #include "SDL_gtk.h"
 
 #include <dlfcn.h>
@@ -298,3 +299,5 @@ void SDL_UpdateGtk(void)
         gtk.g.main_context_iteration(NULL, GTK_FALSE);
     }
 }
+
+#endif /* Desktop GTK is unavailable in native PS5 titles. */

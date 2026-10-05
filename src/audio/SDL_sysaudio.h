@@ -380,6 +380,7 @@ extern AudioBootStrap WINMM_bootstrap;
 extern AudioBootStrap HAIKUAUDIO_bootstrap;
 extern AudioBootStrap COREAUDIO_bootstrap;
 extern AudioBootStrap DISKAUDIO_bootstrap;
+extern AudioBootStrap PS5AUDIO_bootstrap;
 extern AudioBootStrap DUMMYAUDIO_bootstrap;
 extern AudioBootStrap AAUDIO_bootstrap;
 extern AudioBootStrap OPENSLES_bootstrap;

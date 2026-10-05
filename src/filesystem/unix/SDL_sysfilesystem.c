@@ -124,6 +124,9 @@ static char *search_path_for_binary(const char *bin)
 
 static char *GetExePath(void)
 {
+#ifdef __PROSPERO__
+    return SDL_strdup("/app0/eboot.bin");
+#endif
     char *result = NULL;
 
 #ifdef SDL_PLATFORM_FREEBSD
