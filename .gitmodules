@@ -152,7 +152,7 @@
 	gclient-condition = dawn_standalone
 [submodule "third_party/abseil-cpp"]
 	path = third_party/abseil-cpp
-	url = https://github.com/mshivam019/ttp-ps5.git
+	url = https://github.com/mshivam019/dusklight-ps5.git
 	gclient-condition = dawn_standalone
 [submodule "third_party/directx-shader-compiler/src"]
 	path = third_party/directx-shader-compiler/src

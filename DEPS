@@ -417,7 +417,7 @@ deps = {
   },
 
   'third_party/abseil-cpp': {
-    'url': 'https://github.com/mshivam019/ttp-ps5.git@b4f25e80201b0be113732ab2e0400f37739b94d9',
+    'url': 'https://github.com/mshivam019/dusklight-ps5.git@b4f25e80201b0be113732ab2e0400f37739b94d9',
     'condition': 'dawn_standalone',
   },
 
