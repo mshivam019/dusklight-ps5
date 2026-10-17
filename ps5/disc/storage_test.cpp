@@ -169,6 +169,7 @@ int main(int argc,char** argv) {
             return value.phase!=phase || value.completed==0;
         }); });
         assert(get(usb/"cancel-copy.iso")==payload && !fs::exists(ready.images/"cancel-copy.iso"));
+        assert(!fs::exists(ready.images/"cancel-copy.iso.importing"));
     }
     // Save location applies to raw and GCI saves, all regions and both slots.
     ps5_storage::activate_save_folder("");

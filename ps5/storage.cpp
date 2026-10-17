@@ -60,6 +60,12 @@ void copy_verified(const fs::path& source, const fs::path& target, const Progres
         throw std::runtime_error("Unsafe interrupted data copy");
     if (fs::exists(target) || fs::is_symlink(target))
         throw std::runtime_error("Refusing to overwrite personal data");
+    // A failed/canceled copy must not strand a large temporary ISO on the SSD.
+    // Declared before streams so they close before cleanup runs.
+    struct PartialCopy {
+        fs::path path;
+        ~PartialCopy() { std::error_code ec; fs::remove(path,ec); }
+    } cleanup{temporary};
     const auto total = fs::file_size(source);
     std::ifstream input(source,std::ios::binary);
     std::ofstream output(temporary,std::ios::binary | std::ios::trunc);
@@ -367,6 +373,8 @@ fs::path prepare_save_folder(const fs::path& requested,const fs::path& copy_from
     std::vector<std::pair<fs::path,fs::path>> files;
     if (!copy_from.empty() && target!=copy_from.lexically_normal()) {
         existing_directory(copy_from);
+        if (copy_from.lexically_normal()!=prepared_paths->root/"user" && !marker_valid(copy_from))
+            throw std::runtime_error("Save folder unavailable. Connect its drive or choose another folder in Settings.");
         if (inside(target,copy_from) || inside(copy_from,target))
             throw std::runtime_error("Choose a separate save folder, not a parent or child of the current folder.");
         auto add=[&](const fs::directory_entry& entry) {
