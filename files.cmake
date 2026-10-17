@@ -1564,6 +1564,7 @@ set(DUSK_FILES
         src/dusk/speedrun.cpp
         src/dusk/stubs.cpp
         src/dusk/texture_replacements.cpp
+        src/dusk/ps5_buttons.cpp
         src/dusk/texture_replacements.hpp
         src/dusk/touch_camera.cpp
         src/dusk/ui/achievements.cpp

@@ -995,31 +995,6 @@ void Prelaunch::build_menu_buttons() {
         });
         apply_intro_animation(mMenuButtons.back()->root(), "delay-2");
 
-        mMenuButtons.push_back(std::make_unique<Button>(menuList, "Menu language / Menüsprache"));
-        mMenuButtons.back()->on_pressed([this] {
-            Modal::Props props{
-                .title = "Menu language",
-                .bodyText = "Choose the language of the startup interface. Game text has its own language setting. Close and reopen Dusklight after changing this option.",
-            };
-            for (const auto& option : std::array<std::pair<const char*, const char*>, 2>{{
-                     {"en", "English"}, {"de", "Deutsch"}}}) {
-                props.actions.push_back(ModalAction{
-                    .label = option.second,
-                    .onPressed = [id = std::string(option.first)](Modal& modal) {
-                        getSettings().backend.menuLanguage.setValue(id);
-                        config::save();
-                        modal.pop();
-                    },
-                });
-            }
-            props.actions.push_back(ModalAction{
-                .label = "Cancel", .onPressed = [](Modal& modal) { modal.pop(); },
-            });
-            props.isVertical = true;
-            push(std::make_unique<Modal>(std::move(props)));
-        });
-        apply_intro_animation(mMenuButtons.back()->root(), "delay-2");
-
         mMenuButtons.push_back(std::make_unique<Button>(menuList, "Mods"));
         mModsButton = mMenuButtons.back().get();
         mModsButton->set_disabled(!mods::ModLoader::instance().initialized());

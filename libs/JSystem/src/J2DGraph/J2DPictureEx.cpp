@@ -1,4 +1,5 @@
 #include "JSystem/JSystem.h" // IWYU pragma: keep
+#include "dusk/ps5_buttons.hpp"
 
 #include "JSystem/J2DGraph/J2DPictureEx.h"
 #include "JSystem/J2DGraph/J2DMaterial.h"
@@ -119,6 +120,9 @@ void J2DPictureEx::drawTexCoord(f32 param_0, f32 param_1, f32 param_2, f32 param
     if (mMaterial && !mMaterial->isVisible()) {
         return;
     }
+#ifdef __PROSPERO__
+    if (dusk::ps5_buttons::draw(*this, param_0, param_1, param_2, param_3, param_12)) return;
+#endif
     GXLoadPosMtxImm(auStack_88, 0);
     JUtility::TColor TStack_8c = mCornerColor[0];
     JUtility::TColor TStack_90 = mCornerColor[1];
@@ -418,6 +422,9 @@ void J2DPictureEx::draw(f32 param_0, f32 param_1, f32 width, f32 height, bool pa
     if (!mMaterial->isVisible()) {
         return;
     }
+#ifdef __PROSPERO__
+    if (dusk::ps5_buttons::draw(*this, param_0, param_1, width, height)) return;
+#endif
 
     GXClearVtxDesc();
     GXSetVtxDesc(GX_VA_POS, GX_DIRECT);

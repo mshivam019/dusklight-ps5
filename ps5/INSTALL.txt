@@ -25,13 +25,14 @@ Controls: Cross=A, Circle=B, Square=X, Triangle=Y, Options=Start.
 Touchpad opens Dusklight settings. Sticks control movement/camera; L2/R2 are triggers.
 
 Startup interface language:
-Choose Menu language / Menüsprache on the launch screen, select English or Deutsch,
+Choose Settings -> Interface -> Menu language (Einstellungen -> Oberfläche -> Menüsprache), select English or Deutsch,
 then close and reopen the app. The preference survives app-folder replacement.
 It controls the startup interface independently from game text. Common settings
 labels are translated too; advanced help without a translation remains English.
 The first launch with this option shows the menu once for existing installations.
 
-Built-in PS5 button artwork uses the default A/B/X/Y/Z mapping. User texture packs
+Built-in PS5 button artwork uses the default A/B/X/Y/Z mapping, L=L2, R=R2, Z=R1.
+It replaces complete caps as well as inventory/dialogue icons. User texture packs
 have higher priority. The existing texture replacement switch controls this art.
 The first player's controller follows the game user. Existing other console users are not reassigned.
 

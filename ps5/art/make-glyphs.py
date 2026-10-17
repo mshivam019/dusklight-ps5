@@ -1,76 +1,65 @@
 #!/usr/bin/env python3
-# Dusklight for the PlayStation 5 - the DualSense's symbols for the game's button prompts.
 # SPDX-License-Identifier: MIT
-"""Makes ps5/art/glyphs/*.png: replacement textures for the letters on the game's buttons.
+"""Build complete PS5 prompts from independent CC0 artwork, without a game disc.
 
-The game draws a button as a coloured shape with a white letter over it, each letter a small
-texture of its own. Dusklight replaces a texture by a file named after it (Dolphin's scheme:
-tex1_<width>x<height>_<hash of its texels>_<format>.png), so each picture here carries the name
-of the letter it stands in for, and nothing of the letter itself: a cross for A, a circle for B,
-a square for X and a triangle for Y, as Dusklight's default mapping has them (A south, B east,
-X west, Y north), and "R1" for Z. The names are the GameCube USA disc's.
-
-The symbols are Kenney's Input Prompts (www.kenney.nl, CC0: ps5/art/kenney/): of each of its
-outlined buttons the outline is dropped, since the game draws the button itself, and what is
-inside is kept.
-
-Needs Python with Pillow.
+Extends Gary Riches' PS5_Dusklight approach to button bodies and inline icons.
+The manifest identifies original resources by hash; it contains no game pixels.
+Requires Pillow. Output is glyphs/*.png and generated-button-textures.inc.
 """
 from pathlib import Path
+import json
+from PIL import Image, ImageDraw, ImageChops
 
-from PIL import Image
-
-SCALE = 4  # the replacement is this many times the original's size
 art = Path(__file__).resolve().parent
-out = art / "glyphs"
+out = art/'glyphs'
 out.mkdir(exist_ok=True)
+manifest = json.loads((art/'button-textures.json').read_text(encoding='utf-8'))
 
 
-def inside(source):
-    """The picture without its outline: the connected shape with the largest bounds goes."""
-    alpha = Image.open(art / "kenney" / (source + ".png")).convert("RGBA").getchannel("A")
-    w, h = alpha.size
-    values = list(alpha.tobytes())
-    solid = [v > 40 for v in values]
-    label = [0] * (w * h)
-    shapes = []  # (bounds' area, label)
-    for start in range(w * h):
-        if not solid[start] or label[start]:
-            continue
-        n = len(shapes) + 1
-        label[start] = n
-        stack = [start]
-        x0 = x1 = start % w
-        y0 = y1 = start // w
-        while stack:
-            p = stack.pop()
-            x, y = p % w, p // w
-            x0, x1, y0, y1 = min(x0, x), max(x1, x), min(y0, y), max(y1, y)
-            for q in (p - 1 if x else -1, p + 1 if x < w - 1 else -1, p - w, p + w):
-                if 0 <= q < w * h and solid[q] and not label[q]:
-                    label[q] = n
-                    stack.append(q)
-        shapes.append(((x1 - x0) * (y1 - y0), n))
-    outline = max(shapes)[1]
-    keep = Image.frombytes("L", (w, h), bytes(a if solid[i] and label[i] != outline else 0 for i, a in enumerate(values)))
-    return keep.crop(keep.getbbox())
+def prompt(symbol):
+    image = Image.new('RGBA', (256,256))
+    draw = ImageDraw.Draw(image)
+    if symbol in ('options','stick_l','stick_r'):
+        draw.ellipse((18,18,238,238), fill=(35,38,44,255), outline='white', width=10)
+        if symbol == 'options':
+            for y in (87,128,169): draw.line((81,y,175,y), fill='white', width=10)
+        elif symbol == 'stick_l':
+            draw.line((100,81,100,172,168,172),fill='white',width=14)
+        else:
+            draw.line((95,177,95,80,139,80,165,96,165,121,140,136,95,136),fill='white',width=13)
+            draw.line((136,136,173,177),fill='white',width=13)
+    else:
+        source = Image.open(art/'kenney'/(symbol+'.png')).convert('RGBA')
+        alpha = source.getchannel('A')
+        bounds = alpha.getbbox()
+        assert bounds
+        alpha = alpha.crop(bounds)
+        # Flood from outside the CC0 outline to obtain its closed silhouette.
+        mask = alpha.point(lambda v: 255 if v>40 else 0)
+        exterior = Image.new('L', (mask.width+4,mask.height+4),255)
+        exterior.paste(Image.eval(mask,lambda v:255-v),(2,2))
+        ImageDraw.floodfill(exterior,(0,0),0,thresh=0)
+        body = exterior.crop((2,2,mask.width+2,mask.height+2))
+        body = ImageChops.lighter(body,mask)
+        cap = Image.new('RGBA', alpha.size,(35,38,44,255))
+        cap.putalpha(body)
+        white = Image.new('RGBA',alpha.size,'white')
+        white.putalpha(alpha)
+        cap = Image.alpha_composite(cap,white)
+        scale = min(224/cap.width,224/cap.height)
+        cap = cap.resize((round(cap.width*scale),round(cap.height*scale)),Image.Resampling.LANCZOS)
+        image.alpha_composite(cap,((256-cap.width)//2,(256-cap.height)//2))
+    return image.resize((128,128),Image.Resampling.LANCZOS)
 
 
-def glyph(name, w, h, source, fill=0.8):
-    symbol = inside(source)
-    box = (w * SCALE * fill, h * SCALE * fill)
-    k = min(box[0] / symbol.width, box[1] / symbol.height)
-    symbol = symbol.resize((max(1, round(symbol.width * k)), max(1, round(symbol.height * k))), Image.LANCZOS)
-    mask = Image.new("L", (w * SCALE, h * SCALE), 0)
-    mask.paste(symbol, ((mask.width - symbol.width) // 2, (mask.height - symbol.height) // 2))
-    white = Image.new("RGBA", mask.size, (255, 255, 255, 0))
-    white.putalpha(mask)
-    white.save(out / (name + ".png"))
-
-
-glyph("tex1_32x46_683dc853245a0f36_0", 32, 46, "playstation_button_cross_outline")     # A
-glyph("tex1_24x40_b191153a917b3b50_0", 24, 40, "playstation_button_circle_outline")    # B
-glyph("tex1_32x45_3b03f19ac102dd38_0", 32, 45, "playstation_button_square_outline")    # X
-glyph("tex1_32x40_a57e14b2809290fc_0", 32, 40, "playstation_button_triangle_outline")  # Y
-glyph("tex1_24x40_1868b6990a352fae_2", 24, 40, "playstation_trigger_r1_outline", 0.95)  # Z
-print(sorted(p.name for p in out.glob("*.png")))
+lines = ['// Generated by ps5/art/make-glyphs.py; resource identifiers, no game image data.']
+for item in manifest:
+    key=item['key']
+    parts=key.split('_')
+    w,h=map(int,parts[1].split('x'))
+    fmt=int(parts[-1])
+    if item['style']!='Backing':
+        prompt(item['symbol']).save(out/(key+'.png'))
+    lines.append(f'    {{{w}, {h}, {fmt}, 0x{parts[2]}ULL, Style::{item["style"]}}},')
+(art/'generated-button-textures.inc').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+print('Generated',sum(i['style']!='Backing' for i in manifest),'complete PS5 prompts')

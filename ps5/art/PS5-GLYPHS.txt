@@ -5,13 +5,17 @@ Revision: 577c76212bec33198d69ca727433573ec00beb78
 Original generator: ps5/art/make-glyphs.py (MIT)
 Original images: ps5/art/glyphs/*.png
 
-The five replacement textures shipped under res/ps5-glyphs are unchanged from
-that reference. They are generated from Kenney's Input Prompts, CC0:
+The original five-symbol approach is extended here to complete neutral button
+caps, inventory/dialogue shoulder icons, Options and stick prompts. The generator
+retains Kenney's outlines and fills their interiors instead of stripping the rim.
+Options and stick marks are simple independent geometric artwork in the generator.
+The symbols and shoulder outlines use Kenney's Input Prompts, CC0:
 https://kenney.nl/assets/input-prompts
 The original CC0 input images and license are under ps5/art/kenney.
 No image data from a game disc is included. Texture filenames identify the
 original button resources; the PNG pixels are independent replacement artwork.
 
-Default mapping: A=Cross, B=Circle, X=Square, Y=Triangle, Z=R1.
-The reference labels these resource hashes as USA; appearance with the PAL
-disc must be checked on the console before claiming PAL glyph support.
+Default mapping: A=Cross, B=Circle, X=Square, Y=Triangle, L=L2, R=R2, Z=R1.
+button-textures.json identifies 25 original resources (20 replacement prompts,
+5 obsolete backing shapes). Each identifier was found on PAL GZ2P01. Matching
+filenames do not establish visual correctness; manual console testing is required.

@@ -116,21 +116,25 @@ a real Store update have not been tested. The raw-disc backend does not support 
 RVZ, CISO or other compressed images; renaming such a file does not convert it.
 Upstream exposes the language selector in its pre-launch settings when the disc
 contains multiple languages. This release skips that screen by default.
-The startup interface supports English and German. Choose **Menu language /
-Menüsprache** on the launch screen, then close and reopen the app. This setting is
+The startup interface supports English and German. Choose **Settings → Interface →
+Menu language** (**Einstellungen → Oberfläche → Menüsprache**), then close and reopen the app. This setting is
 stored separately from game language. The first launch introducing this setting
 shows the menu once, including on older installs that previously skipped it.
 The catalog also translates common settings labels; untranslated advanced help
 text falls back to English.
 
 On PS5, built-in button artwork follows the default controls: Cross for A, Circle
-for B, Square for X, Triangle for Y and R1 for Z. This uses the same five CC0
-Kenney textures as [Gary Riches' PS5_Dusklight](https://github.com/griches/PS5_Dusklight).
+for B, Square for X, Triangle for Y, L2 for L, R2 for R and R1 for Z. It extends
+[Gary Riches' PS5_Dusklight](https://github.com/griches/PS5_Dusklight) with complete
+CC0 Kenney button caps and the separate inline icons used by inventory and dialogues.
+The old GameCube backing shapes are suppressed only for the exact button resources;
+neutral tinting and square quads prevent old colours and bean shapes showing through.
+Options and stick prompts also use independent PS5 artwork.
 The artwork is loaded through the existing texture-replacement system; user
 texture packs retain higher priority, and disabling replacements disables it.
-L/R, Start and stick pictures are not changed by these five textures. Remapping
-controls does not dynamically redraw the artwork. PAL appearance requires the
-new console test; the original game-code and rendering settings are unchanged.
+Remapping controls does not dynamically redraw the artwork. All 25 resource
+identifiers were matched against a private PAL disc; console appearance and layout
+still require manual testing. Graphics settings and game simulation are unchanged.
 
 ## Build and validate
 
