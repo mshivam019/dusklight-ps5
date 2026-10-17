@@ -1671,6 +1671,7 @@ set(DUSK_FILES
         src/dusk/ui/touch_controls_editor.cpp
         src/dusk/ui/touch_controls_editor.hpp
         src/dusk/ui/ui.cpp
+        src/dusk/ui/localization.cpp
         src/dusk/ui/ui.hpp
         src/dusk/ui/warp.cpp
         src/dusk/ui/warp.hpp

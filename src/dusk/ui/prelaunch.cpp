@@ -1,4 +1,5 @@
 #include "prelaunch.hpp"
+#include "localization.hpp"
 
 #include "dusk/app_info.hpp"
 #include "dusk/config.hpp"
@@ -789,6 +790,7 @@ void ensure_initialized() noexcept {
         verification_from_config(getSettings().backend.isoVerification.getValue());
     state.initialLanguage = getSettings().game.language;
     state.initialGraphicsBackend = getSettings().backend.graphicsBackend;
+    state.initialMenuLanguage = getSettings().backend.menuLanguage;
     state.initialCardFileType = getSettings().backend.cardFileType;
     state.errorString.clear();
     state.initialized = true;
@@ -810,9 +812,9 @@ void open_iso_picker() noexcept {
         if (!folder) throw std::runtime_error("Protected disc folder is unavailable");
         const auto available = ps5_storage::discs(folder);
         props.bodyText = available.empty() ?
-            "Close Dusklight and copy your USA or European GameCube raw ISO to " +
-                std::string(folder) + ". Then reopen Dusklight and select it here. "
-                "Wii discs and compressed images are not supported by this PS5 backend." :
+            localization::translate("Close Dusklight and copy your USA or European GameCube raw ISO to ") +
+                std::string(folder) + localization::translate(". Then reopen Dusklight and select it here. "
+                "Wii discs and compressed images are not supported by this PS5 backend.") :
             "Choose a protected GameCube disc image. A changed disc takes effect after restarting Dusklight.";
         for (const auto& disc : available) {
             props.actions.push_back(ModalAction{
@@ -844,6 +846,9 @@ void open_iso_picker() noexcept {
 }
 
 bool is_restart_pending() noexcept {
+    if (getSettings().backend.menuLanguage.getValue() != prelaunch_state().initialMenuLanguage) {
+        return true;
+    }
     const auto& state = prelaunch_state();
     if (!state.activeDiscPath.empty() && state.configuredDiscPath != state.activeDiscPath) {
         return true;
@@ -987,6 +992,31 @@ void Prelaunch::build_menu_buttons() {
         mMenuButtons.back()->on_pressed([this] {
             mRestartSuppressed = false;
             push(std::make_unique<SettingsWindow>(true));
+        });
+        apply_intro_animation(mMenuButtons.back()->root(), "delay-2");
+
+        mMenuButtons.push_back(std::make_unique<Button>(menuList, "Menu language / Menüsprache"));
+        mMenuButtons.back()->on_pressed([this] {
+            Modal::Props props{
+                .title = "Menu language",
+                .bodyText = "Choose the language of the startup interface. Game text has its own language setting. Close and reopen Dusklight after changing this option.",
+            };
+            for (const auto& option : std::array<std::pair<const char*, const char*>, 2>{{
+                     {"en", "English"}, {"de", "Deutsch"}}}) {
+                props.actions.push_back(ModalAction{
+                    .label = option.second,
+                    .onPressed = [id = std::string(option.first)](Modal& modal) {
+                        getSettings().backend.menuLanguage.setValue(id);
+                        config::save();
+                        modal.pop();
+                    },
+                });
+            }
+            props.actions.push_back(ModalAction{
+                .label = "Cancel", .onPressed = [](Modal& modal) { modal.pop(); },
+            });
+            props.isVertical = true;
+            push(std::make_unique<Modal>(std::move(props)));
         });
         apply_intro_animation(mMenuButtons.back()->root(), "delay-2");
 
@@ -1187,7 +1217,8 @@ void Prelaunch::update() {
             set_text_content(mUpdateMessage, "Update available!");
             if (mUpdateDownloadLabel != nullptr) {
                 set_text_content(mUpdateDownloadLabel,
-                    fmt::format("Download {}", update_release_label(sUpdateCheckResult->latest)));
+                    fmt::format(fmt::runtime(localization::translate("Download {}")),
+                        update_release_label(sUpdateCheckResult->latest)));
             }
         } else {
             mUpdateStatus->SetAttribute("state", "failed");

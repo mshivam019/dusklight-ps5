@@ -1,6 +1,7 @@
 #include "document.hpp"
 
 #include "ui.hpp"
+#include "localization.hpp"
 
 #include "m_Do/m_Do_audio.h"
 
@@ -18,6 +19,7 @@ Rml::ElementDocument* load_document(const Rml::String& source) {
     }
     auto* document = context->LoadDocumentFromMemory(source);
     if (document != nullptr) {
+        localization::translate_document(document);
         if (auto global = Rml::Factory::InstanceStyleSheetFile("res/rml/global.rcss")) {
             if (const auto* local = document->GetStyleSheetContainer()) {
                 global = global->CombineStyleSheetContainer(*local);

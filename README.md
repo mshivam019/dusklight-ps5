@@ -116,8 +116,21 @@ a real Store update have not been tested. The raw-disc backend does not support 
 RVZ, CISO or other compressed images; renaming such a file does not convert it.
 Upstream exposes the language selector in its pre-launch settings when the disc
 contains multiple languages. This release skips that screen by default.
-The Dusklight settings interface is currently in English; changing game text
-language does not translate it. Translation patches are not included.
+The startup interface supports English and German. Choose **Menu language /
+Menüsprache** on the launch screen, then close and reopen the app. This setting is
+stored separately from game language. The first launch introducing this setting
+shows the menu once, including on older installs that previously skipped it.
+The catalog also translates common settings labels; untranslated advanced help
+text falls back to English.
+
+On PS5, built-in button artwork follows the default controls: Cross for A, Circle
+for B, Square for X, Triangle for Y and R1 for Z. This uses the same five CC0
+Kenney textures as [Gary Riches' PS5_Dusklight](https://github.com/griches/PS5_Dusklight).
+The artwork is loaded through the existing texture-replacement system; user
+texture packs retain higher priority, and disabling replacements disables it.
+L/R, Start and stick pictures are not changed by these five textures. Remapping
+controls does not dynamically redraw the artwork. PAL appearance requires the
+new console test; the original game-code and rendering settings are unchanged.
 
 ## Build and validate
 

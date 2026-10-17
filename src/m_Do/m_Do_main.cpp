@@ -35,6 +35,7 @@
 #include "m_Do/m_Do_printf.h"
 #include "m_Do/m_Do_ext2.h"
 #include <cstring>
+#include "dusk/ui/localization.hpp"
 #ifdef __PROSPERO__
 #include <cstdlib>
 #include <exception>
@@ -648,6 +649,7 @@ int game_main(int argc, char* argv[]) {
 
     dusk::config::load_from_user_preferences();
     ApplyCVarOverrides(parsed_arg_options["cvar"]);
+    dusk::ui::localization::initialize();
 #ifdef __PROSPERO__
     // Restore a protected selection rather than always forcing /app0/game.iso.
     try {

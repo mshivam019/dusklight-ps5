@@ -1,4 +1,5 @@
 #include "component.hpp"
+#include "localization.hpp"
 
 namespace dusk::ui {
 
@@ -132,6 +133,7 @@ Rml::Element* Component::add_text(const Rml::String& text) {
 Rml::Element* Component::add_rml(const Rml::String& rml) {
     auto* elem = append(mRoot, "div");
     elem->SetInnerRML(rml);
+    localization::translate_document(elem);
     return elem;
 }
 

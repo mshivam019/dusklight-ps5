@@ -339,6 +339,7 @@ struct UserSettings {
         ConfigVar<std::string> isoPath;
         ConfigVar<DiscVerificationState> isoVerification;
         ConfigVar<std::string> graphicsBackend;
+        ConfigVar<std::string> menuLanguage;
         ConfigVar<bool> skipPreLaunchUI;
         ConfigVar<bool> showPipelineCompilation;
         ConfigVar<bool> wasPresetChosen;

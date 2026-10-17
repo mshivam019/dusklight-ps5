@@ -178,6 +178,7 @@ UserSettings g_userSettings = {
         .isoPath {"backend.isoPath", ""},
         .isoVerification {"backend.isoVerification", DiscVerificationState::Unknown},
         .graphicsBackend {"backend.graphicsBackend", "auto"},
+        .menuLanguage {"backend.menuLanguage", ""},
         .skipPreLaunchUI {"backend.skipPreLaunchUI", false},
         .showPipelineCompilation {"backend.showPipelineCompilation", true},
         .wasPresetChosen {"backend.wasPresetChosen", false},
@@ -398,6 +399,7 @@ void registerSettings() {
     Register(g_userSettings.backend.isoPath);
     Register(g_userSettings.backend.isoVerification);
     Register(g_userSettings.backend.graphicsBackend);
+    Register(g_userSettings.backend.menuLanguage);
     Register(g_userSettings.backend.skipPreLaunchUI);
     Register(g_userSettings.backend.showPipelineCompilation);
     Register(g_userSettings.backend.wasPresetChosen);

@@ -1,0 +1,17 @@
+PlayStation button artwork reference
+
+Source: https://github.com/griches/PS5_Dusklight
+Revision: 577c76212bec33198d69ca727433573ec00beb78
+Original generator: ps5/art/make-glyphs.py (MIT)
+Original images: ps5/art/glyphs/*.png
+
+The five replacement textures shipped under res/ps5-glyphs are unchanged from
+that reference. They are generated from Kenney's Input Prompts, CC0:
+https://kenney.nl/assets/input-prompts
+The original CC0 input images and license are under ps5/art/kenney.
+No image data from a game disc is included. Texture filenames identify the
+original button resources; the PNG pixels are independent replacement artwork.
+
+Default mapping: A=Cross, B=Circle, X=Square, Y=Triangle, Z=R1.
+The reference labels these resource hashes as USA; appearance with the PAL
+disc must be checked on the console before claiming PAL glyph support.
