@@ -3,19 +3,17 @@ PlayStation button artwork reference
 Source: https://github.com/griches/PS5_Dusklight
 Revision: 577c76212bec33198d69ca727433573ec00beb78
 Original generator: ps5/art/make-glyphs.py (MIT)
-Original images: ps5/art/glyphs/*.png
+Original five glyph proportions and J2DScreen colour pass are adapted here.
 
-The original five-symbol approach is extended here to complete neutral button
-caps, inventory/dialogue shoulder icons, Options and stick prompts. The generator
-retains Kenney's outlines and fills their interiors instead of stripping the rim.
-Options and stick marks are simple independent geometric artwork in the generator.
-The symbols and shoulder outlines use Kenney's Input Prompts, CC0:
-https://kenney.nl/assets/input-prompts
-The original CC0 input images and license are under ps5/art/kenney.
-No image data from a game disc is included. Texture filenames identify the
-original button resources; the PNG pixels are independent replacement artwork.
+HUD symbols sit in the game's original shaded button bodies, with blue for
+Cross and red for Circle, matching Gary's presentation. Inline prompts combine
+their body and letter in one texture; those use independently generated shaded
+caps with readable PS5 marks. Paletted inline prompts match exact texel hashes
+with wildcard palettes so colour animation does not restore Nintendo letters.
 
+Kenney Input Prompts, CC0: https://kenney.nl/assets/input-prompts
+The CC0 input images and license are under ps5/art/kenney.
+No image data from a game disc is included in this repository or generator.
 Default mapping: A=Cross, B=Circle, X=Square, Y=Triangle, L=L2, R=R2, Z=R1.
-button-textures.json identifies 25 original resources (20 replacement prompts,
-5 obsolete backing shapes). Each identifier was found on PAL GZ2P01. Matching
-filenames do not establish visual correctness; manual console testing is required.
+The resource identifiers were found on PAL GZ2P01. Manual console testing is
+required to confirm actual visual layout; registrations alone do not prove it.

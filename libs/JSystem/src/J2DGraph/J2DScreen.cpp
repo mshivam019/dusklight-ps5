@@ -1,3 +1,4 @@
+#include "dusk/ps5_buttons.hpp"
 #include "JSystem/JSystem.h" // IWYU pragma: keep
 
 #include "JSystem/J2DGraph/J2DScreen.h"
@@ -76,6 +77,9 @@ bool J2DScreen::private_set(JSURandomInputStream* p_stream, u32 param_1, JKRArch
     }
 
     bool make_end = makeHierarchyPanes(this, p_stream, param_1, p_archive) != 2;
+#ifdef __PROSPERO__
+    if (make_end) dusk::ps5_buttons::prepare_screen(*this);
+#endif
 
     if (!(param_1 & 0x1F0000)) {
         clean();

@@ -81,25 +81,29 @@
     "resource": "font_02.bti",
     "key": "tex1_24x24_74c00c62624f1e67_5a4b9fd6e2d23f96_8",
     "style": "InlineFace",
-    "symbol": "playstation_button_square_outline"
+    "symbol": "playstation_button_square_outline",
+    "replacement_key": "tex1_24x24_74c00c62624f1e67_$_8"
   },
   {
     "resource": "font_03.bti",
     "key": "tex1_24x24_8b8143aaa181b64a_970dc1662f193ee6_8",
     "style": "InlineFace",
-    "symbol": "playstation_button_triangle_outline"
+    "symbol": "playstation_button_triangle_outline",
+    "replacement_key": "tex1_24x24_8b8143aaa181b64a_$_8"
   },
   {
     "resource": "font_04.bti",
     "key": "tex1_24x24_dcda11193c4368a1_0773499c79b8de07_8",
     "style": "InlineShoulder",
-    "symbol": "playstation_trigger_l2_outline"
+    "symbol": "playstation_trigger_l2_outline",
+    "replacement_key": "tex1_24x24_dcda11193c4368a1_$_8"
   },
   {
     "resource": "font_05.bti",
     "key": "tex1_24x24_2c8476ec0c54301b_532709965b890d24_8",
     "style": "InlineShoulder",
-    "symbol": "playstation_trigger_r2_outline"
+    "symbol": "playstation_trigger_r2_outline",
+    "replacement_key": "tex1_24x24_2c8476ec0c54301b_$_8"
   },
   {
     "resource": "font_06.bti",
@@ -111,37 +115,43 @@
     "resource": "font_11.bti",
     "key": "tex1_24x24_325323439c4df341_dad893fdbe0afccc_8",
     "style": "InlineFace",
-    "symbol": "options"
+    "symbol": "options",
+    "replacement_key": "tex1_24x24_325323439c4df341_$_8"
   },
   {
     "resource": "font_12.bti",
     "key": "tex1_24x24_2997c2de3939688c_2116ac98c3fe2a7d_8",
     "style": "InlineFace",
-    "symbol": "playstation_button_cross_outline"
+    "symbol": "playstation_button_cross_outline",
+    "replacement_key": "tex1_24x24_2997c2de3939688c_$_8"
   },
   {
     "resource": "font_07_01.bti",
     "key": "tex1_24x24_a5cfcf59d288b024_a8f82f64b78daf8c_8",
     "style": "InlineFace",
-    "symbol": "stick_l"
+    "symbol": "stick_l",
+    "replacement_key": "tex1_24x24_a5cfcf59d288b024_$_8"
   },
   {
     "resource": "font_07_02.bti",
     "key": "tex1_24x24_535302a8d703095e_2cf100e32d072f3d_8",
     "style": "InlineFace",
-    "symbol": "stick_l"
+    "symbol": "stick_l",
+    "replacement_key": "tex1_24x24_535302a8d703095e_$_8"
   },
   {
     "resource": "font_09.bti",
     "key": "tex1_24x24_fb460b6cfcecb726_b551f45795f3db64_8",
     "style": "InlineFace",
-    "symbol": "stick_r"
+    "symbol": "stick_r",
+    "replacement_key": "tex1_24x24_fb460b6cfcecb726_$_8"
   },
   {
     "resource": "font_09_02.bti",
     "key": "tex1_24x24_620baa316e0177f4_b551f45795f3db64_8",
     "style": "InlineFace",
-    "symbol": "stick_r"
+    "symbol": "stick_r",
+    "replacement_key": "tex1_24x24_620baa316e0177f4_$_8"
   },
   {
     "resource": "font_38.bti",

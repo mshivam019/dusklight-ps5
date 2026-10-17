@@ -43,7 +43,7 @@ with tempfile.TemporaryDirectory(prefix='dusklight-ui-art-') as temporary:
     subprocess.run([sys.executable,str(art/'make-glyphs.py')],check=True)
     shipped = sorted((ROOT/'res/ps5-glyphs').glob('*.png'))
     manifest = json.loads((art/'button-textures.json').read_text(encoding='utf-8'))
-    expected = {i['key']+'.png' for i in manifest if i['style']!='Backing'}
+    expected = {i.get('replacement_key',i['key'])+'.png' for i in manifest if i['style']!='Backing'}
     assert len(expected) == 20
     assert {p.name for p in shipped} == expected
     assert {p.name for p in shipped} == {p.name for p in (art/'glyphs').glob('*.png')}
@@ -56,7 +56,13 @@ with tempfile.TemporaryDirectory(prefix='dusklight-ui-art-') as temporary:
             a,b = a.convert('RGBA'), b.convert('RGBA')
             assert a.size == b.size and a.tobytes() == b.tobytes(), path.name
             assert a.getchannel('A').getextrema() == (0,255), path.name
-            # Every button is complete artwork: solid dark cap, white outline/symbol,
-            # transparent outside. A mere letter substitution does not satisfy this.
-            assert any(px[:3] == (35,38,44) and px[3]==255 for px in a.getdata()), path.name
+            item = next(i for i in manifest if i.get('replacement_key',i['key'])+'.png' == path.name)
+            if item['style'] in ('Face','Shoulder'):
+                # A HUD replacement contains only a white label. The game
+                # supplies its original shaded body, as in Gary's port.
+                assert all(px[:3] == (255,255,255) for px in a.getdata()),path.name
+            else:
+                assert any(px[3] == 255 and px[:3] != (255,255,255) for px in a.getdata()),path.name
+            if item['key'].endswith('_8'):
+                assert '_$_8.png' in path.name, 'Palette animation must not hide the PS5 prompt'
 print('German catalog and reproducible CC0 PS5 artwork: PASS')

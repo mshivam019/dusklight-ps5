@@ -10,7 +10,7 @@
 
 namespace dusk::ps5_buttons {
 namespace {
-enum class Style { Backing, Face, Shoulder, InlineFace, InlineShoulder };
+enum class Style { Face, Shoulder, InlineFace, InlineShoulder };
 struct Resource {
     unsigned width, height, format;
     unsigned long long hash;
@@ -19,11 +19,6 @@ struct Resource {
 constexpr Resource resources[] = {
 #include "../../ps5/art/generated-button-textures.inc"
 };
-constexpr std::size_t prompt_count() {
-    std::size_t count = 0;
-    for (const auto& resource : resources) count += resource.style != Style::Backing;
-    return count;
-}
 std::atomic_bool available{false};
 
 const Resource* identify(const ResTIMG* info) {
@@ -49,8 +44,44 @@ const Resource* identify(const ResTIMG* info) {
 }
 
 void set_available(std::size_t registrations) {
-    // Never hide original button bodies if the complete independent artwork is missing.
-    available.store(registrations == prompt_count(), std::memory_order_relaxed);
+    available.store(registrations == std::size(resources), std::memory_order_relaxed);
+}
+
+namespace {
+// Adapted from Gary Riches' PS5_Dusklight colour pass (MIT). Match the exact A
+// label, then recolour its green backing within that button's pane hierarchy.
+bool green(const JUtility::TColor& c) {
+    return c.g >= 60 && c.g > c.r + c.r / 3 && c.g > c.b + c.b / 3;
+}
+JUtility::TColor blue(const JUtility::TColor& c) {
+    return {u8(c.r * 0.55f), u8(c.g * 0.62f), c.g, c.a};
+}
+void recolour(J2DPane& pane, J2DPane& letter) {
+    if (&pane != &letter && pane.getTypeID() == 18) {
+        auto& picture = static_cast<J2DPicture&>(pane);
+        const auto black = picture.getBlack(), white = picture.getWhite();
+        if (green(black) || green(white))
+            picture.setBlackWhite(green(black) ? blue(black) : black,
+                                  green(white) ? blue(white) : white);
+    }
+    for (auto* child = pane.getFirstChildPane(); child; child = child->getNextChildPane())
+        recolour(*child,letter);
+}
+void button_colours(J2DPane& pane) {
+    for (auto* child = pane.getFirstChildPane(); child; child = child->getNextChildPane()) {
+        if (child->getTypeID() == 18) {
+            auto* texture = static_cast<J2DPicture*>(child)->getTexture(0);
+            const auto* resource = identify(texture ? texture->getTexInfo() : nullptr);
+            if (resource == &resources[0]) recolour(pane,*child);
+        }
+        button_colours(*child);
+    }
+}
+}
+
+void prepare_screen(J2DPane& pane) {
+    if (available.load(std::memory_order_relaxed) &&
+        getSettings().game.enableTextureReplacements) button_colours(pane);
 }
 
 bool draw(J2DPicture& picture, float x, float y, float width, float height, Mtx* parent) {
@@ -58,8 +89,8 @@ bool draw(J2DPicture& picture, float x, float y, float width, float height, Mtx*
         !getSettings().game.enableTextureReplacements) return false;
     auto* texture = picture.getTexture(0);
     const auto* resource = identify(texture != nullptr ? texture->getTexInfo() : nullptr);
-    if (resource == nullptr) return false;
-    if (resource->style == Style::Backing) return true;
+    if (resource == nullptr || (resource->style != Style::InlineFace &&
+                                resource->style != Style::InlineShoulder)) return false;
 
     Mtx matrix;
     const auto alpha = parent != nullptr ? picture.mColorAlpha : picture.mAlpha;
@@ -71,21 +102,10 @@ bool draw(J2DPicture& picture, float x, float y, float width, float height, Mtx*
         x = y = 0.0f;
     }
 
-    // Complete caps replace both the separate GC letter and its bean/coloured
-    // backing. Centre a round cap (or wide shoulder) instead of stretching the
-    // PS5 artwork into the original narrow letter's quad.
-    float cap_width, cap_height;
-    if (resource->style == Style::Face) {
-        cap_width = cap_height = std::max(width, height) * 1.15f;
-    } else if (resource->style == Style::Shoulder) {
-        cap_width = height * 1.5f;
-        cap_height = cap_width; // artwork has transparent top/bottom margins
-    } else {
-        cap_width = cap_height = std::max(width, height);
-        if (resource->style == Style::InlineShoulder) cap_width = cap_height = height * 1.25f;
-    }
-    x += (width - cap_width) * 0.5f;
-    y += (height - cap_height) * 0.5f;
+    // Only inline icons contain a body and letter in the same source texture.
+    // Preserve their existing layout dimensions and draw our shaded replacement
+    // without the Nintendo-specific tint. The normal HUD renderer stays intact.
+    const float cap_width = width, cap_height = height;
 
     texture->load(GX_TEXMAP0);
     GXLoadPosMtxImm(matrix, GX_PNMTX0);

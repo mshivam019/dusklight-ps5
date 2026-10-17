@@ -1,65 +1,128 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Build complete PS5 prompts from independent CC0 artwork, without a game disc.
+"""PS5 prompts based on Gary Riches' CC0 Kenney glyph generator.
 
-Extends Gary Riches' PS5_Dusklight approach to button bodies and inline icons.
-The manifest identifies original resources by hash; it contains no game pixels.
-Requires Pillow. Output is glyphs/*.png and generated-button-textures.inc.
+HUD labels use the original game's separate shaded button bodies, as Gary's port
+does. Inline prompts include an independently drawn, shaded cap because their
+original textures combine the button body and Nintendo letter in one image.
+No game pixels are read by this generator or included in its output.
 """
 from pathlib import Path
 import json
 from PIL import Image, ImageDraw, ImageChops
 
+SCALE = 4
 art = Path(__file__).resolve().parent
 out = art/'glyphs'
 out.mkdir(exist_ok=True)
 manifest = json.loads((art/'button-textures.json').read_text(encoding='utf-8'))
 
+def inside(source):
+    """The picture without its outline: the connected shape with the largest bounds goes."""
+    alpha = Image.open(art / "kenney" / (source + ".png")).convert("RGBA").getchannel("A")
+    w, h = alpha.size
+    values = list(alpha.tobytes())
+    solid = [v > 40 for v in values]
+    label = [0] * (w * h)
+    shapes = []  # (bounds' area, label)
+    for start in range(w * h):
+        if not solid[start] or label[start]:
+            continue
+        n = len(shapes) + 1
+        label[start] = n
+        stack = [start]
+        x0 = x1 = start % w
+        y0 = y1 = start // w
+        while stack:
+            p = stack.pop()
+            x, y = p % w, p // w
+            x0, x1, y0, y1 = min(x0, x), max(x1, x), min(y0, y), max(y1, y)
+            for q in (p - 1 if x else -1, p + 1 if x < w - 1 else -1, p - w, p + w):
+                if 0 <= q < w * h and solid[q] and not label[q]:
+                    label[q] = n
+                    stack.append(q)
+        shapes.append(((x1 - x0) * (y1 - y0), n))
+    outline = max(shapes)[1]
+    keep = Image.frombytes("L", (w, h), bytes(a if solid[i] and label[i] != outline else 0 for i, a in enumerate(values)))
+    return keep.crop(keep.getbbox())
 
-def prompt(symbol):
-    image = Image.new('RGBA', (256,256))
-    draw = ImageDraw.Draw(image)
-    if symbol in ('options','stick_l','stick_r'):
-        draw.ellipse((18,18,238,238), fill=(35,38,44,255), outline='white', width=10)
-        if symbol == 'options':
-            for y in (87,128,169): draw.line((81,y,175,y), fill='white', width=10)
-        elif symbol == 'stick_l':
-            draw.line((100,81,100,172,168,172),fill='white',width=14)
-        else:
-            draw.line((95,177,95,80,139,80,165,96,165,121,140,136,95,136),fill='white',width=13)
-            draw.line((136,136,173,177),fill='white',width=13)
+
+def glyph(name, w, h, source, fill=0.8):
+    symbol = inside(source)
+    box = (w * SCALE * fill, h * SCALE * fill)
+    k = min(box[0] / symbol.width, box[1] / symbol.height)
+    symbol = symbol.resize((max(1, round(symbol.width * k)), max(1, round(symbol.height * k))), Image.LANCZOS)
+    mask = Image.new("L", (w * SCALE, h * SCALE), 0)
+    mask.paste(symbol, ((mask.width - symbol.width) // 2, (mask.height - symbol.height) // 2))
+    white = Image.new("RGBA", mask.size, (255, 255, 255, 0))
+    white.putalpha(mask)
+    return white
+
+
+
+def inline_prompt(symbol):
+    size = 192
+    mask = Image.new('L', (size,size))
+    draw = ImageDraw.Draw(mask)
+    shoulder = 'trigger' in symbol
+    if shoulder:
+        draw.rounded_rectangle((10,47,182,145),radius=26,fill=255)
     else:
-        source = Image.open(art/'kenney'/(symbol+'.png')).convert('RGBA')
-        alpha = source.getchannel('A')
-        bounds = alpha.getbbox()
-        assert bounds
-        alpha = alpha.crop(bounds)
-        # Flood from outside the CC0 outline to obtain its closed silhouette.
-        mask = alpha.point(lambda v: 255 if v>40 else 0)
-        exterior = Image.new('L', (mask.width+4,mask.height+4),255)
-        exterior.paste(Image.eval(mask,lambda v:255-v),(2,2))
-        ImageDraw.floodfill(exterior,(0,0),0,thresh=0)
-        body = exterior.crop((2,2,mask.width+2,mask.height+2))
-        body = ImageChops.lighter(body,mask)
-        cap = Image.new('RGBA', alpha.size,(35,38,44,255))
-        cap.putalpha(body)
-        white = Image.new('RGBA',alpha.size,'white')
-        white.putalpha(alpha)
-        cap = Image.alpha_composite(cap,white)
-        scale = min(224/cap.width,224/cap.height)
-        cap = cap.resize((round(cap.width*scale),round(cap.height*scale)),Image.Resampling.LANCZOS)
-        image.alpha_composite(cap,((256-cap.width)//2,(256-cap.height)//2))
-    return image.resize((128,128),Image.Resampling.LANCZOS)
+        draw.ellipse((15,15,177,177),fill=255)
+    tint = ((72,133,211) if 'cross' in symbol else
+            (207,69,75) if 'circle' in symbol else (155,160,171))
+    image = Image.new('RGBA',(size,size))
+    pixels = image.load()
+    for y in range(size):
+        # A highlight above a darker lower edge gives the inline prompts the
+        # same visual weight as the shaded HUD caps, without copying game art.
+        factor = 1.22 - 0.65*y/(size-1)
+        for x in range(size):
+            pixels[x,y] = tuple(min(255,round(c*factor)) for c in tint)+(mask.getpixel((x,y)),)
+    edge = Image.new('L',(size,size))
+    ed = ImageDraw.Draw(edge)
+    if shoulder:
+        ed.rounded_rectangle((10,47,182,145),radius=26,outline=180,width=5)
+    else:
+        ed.ellipse((15,15,177,177),outline=180,width=5)
+    shadow = Image.new('RGBA',(size,size),(20,25,34,0))
+    shadow.putalpha(edge)
+    image = Image.alpha_composite(image,shadow)
+    if symbol in ('options','stick_l','stick_r'):
+        marks = Image.new('L',(size,size))
+        md = ImageDraw.Draw(marks)
+        if symbol == 'options':
+            for y in (69,96,123): md.line((63,y,129,y),fill=255,width=7)
+        elif symbol == 'stick_l':
+            md.line((76,61,76,131,122,131),fill=255,width=10)
+        else:
+            md.line((71,135,71,61,104,61,124,75,124,94,104,108,71,108),fill=255,width=9)
+            md.line((102,108,132,135),fill=255,width=9)
+    else:
+        source = inside(symbol)
+        extent = (136,60) if shoulder else (94,94)
+        scale = min(extent[0]/source.width,extent[1]/source.height)
+        source = source.resize((round(source.width*scale),round(source.height*scale)),Image.Resampling.LANCZOS)
+        marks = Image.new('L',(size,size))
+        marks.paste(source,((size-source.width)//2,(size-source.height)//2))
+    white = Image.new('RGBA',(size,size),'white')
+    white.putalpha(marks)
+    return Image.alpha_composite(image,white)
 
 
-lines = ['// Generated by ps5/art/make-glyphs.py; resource identifiers, no game image data.']
+lines = ['// Generated by ps5/art/make-glyphs.py; identifiers only, no game image data.']
 for item in manifest:
-    key=item['key']
-    parts=key.split('_')
-    w,h=map(int,parts[1].split('x'))
-    fmt=int(parts[-1])
-    if item['style']!='Backing':
-        prompt(item['symbol']).save(out/(key+'.png'))
+    key = item['key']
+    parts = key.split('_')
+    w,h = map(int,parts[1].split('x'))
+    fmt = int(parts[-1])
+    if item['style'] == 'Backing':
+        continue
+    if item['style'].startswith('Inline'):
+        picture = inline_prompt(item['symbol'])
+    else:
+        picture = glyph(key,w,h,item['symbol'],0.95 if item['style']=='Shoulder' else 0.8)
+    picture.save(out/(item.get('replacement_key',key)+'.png'))
     lines.append(f'    {{{w}, {h}, {fmt}, 0x{parts[2]}ULL, Style::{item["style"]}}},')
 (art/'generated-button-textures.inc').write_text('\n'.join(lines)+'\n',encoding='utf-8')
-print('Generated',sum(i['style']!='Backing' for i in manifest),'complete PS5 prompts')
+print('Generated',len(lines)-1,'PS5 prompts with shaded inline caps and HUD labels')
