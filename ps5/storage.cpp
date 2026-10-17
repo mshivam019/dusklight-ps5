@@ -88,70 +88,6 @@ bool image_name(const fs::path& path) {
            ext == ".gcz" || ext == ".wia" || ext == ".wbfs";
 }
 
-// A verified image may remain beside eboot.bin. Avoid rereading multiple GB on
-// every launch while both files and their source/destination names are unchanged.
-// A size or write-time change invalidates the hint and forces byte comparison.
-bool imported_image(const fs::path& source, const fs::path& target, bool verified = false,
-                    const ProgressCallback& progress = {}) {
-    if (fs::is_symlink(source) || fs::is_symlink(target) ||
-        !fs::is_regular_file(source) || !fs::is_regular_file(target)) return false;
-    const auto source_name = source.string(), target_name = target.string();
-    const auto modified = [](const fs::path& path) {
-        // libc++ on PS5 uses a 128-bit file-clock duration; streams accept int64.
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-            fs::last_write_time(path).time_since_epoch()).count();
-    };
-    std::ostringstream identity;
-    identity << std::quoted(source_name) << ' ' << std::quoted(target_name) << ' '
-             << fs::file_size(source) << ' ' << modified(source) << ' '
-             << fs::file_size(target) << ' ' << modified(target);
-    const auto stamp = identity.str();
-    uint64_t key = 14695981039346656037ULL;
-    for (const unsigned char c : source_name + '\n' + target_name) { key ^= c; key *= 1099511628211ULL; }
-    std::ostringstream filename;
-    filename << std::hex << key;
-    const auto cache = target.parent_path() / ".verified-imports" / filename.str();
-    directory(cache.parent_path());
-    if (fs::is_symlink(cache) || (fs::exists(cache) && !fs::is_regular_file(cache)))
-        throw std::runtime_error("Unsafe import receipt");
-    if (fs::exists(cache) && fs::file_size(cache) == stamp.size()) {
-        std::ifstream file(cache);
-        const std::string previous{std::istreambuf_iterator<char>(file), {}};
-        if (file && previous == stamp) return true;
-    }
-    if (!verified && !equal_files(source, target, progress)) return false;
-    std::ofstream file(cache, std::ios::trunc);
-    file << stamp;
-    file.close();
-    if (!file) throw std::runtime_error("Cannot record verified image import");
-    return true;
-}
-
-void import_images(const fs::path& source, const fs::path& target, const ProgressCallback& progress = {}) {
-    if (!fs::exists(source)) return;
-    if (fs::is_symlink(source)) throw std::runtime_error("Image directory is a symbolic link");
-    for (const auto& entry : fs::directory_iterator(source)) {
-        report(progress,Phase::Search,entry.path(),0,0);
-        if (!image_name(entry.path())) continue;
-        if (entry.is_symlink()) throw std::runtime_error("Disc image is a symbolic link");
-        if (!entry.is_regular_file()) continue;
-        auto destination = target / entry.path().filename();
-        unsigned number = 1;
-        while (fs::exists(destination) || fs::is_symlink(destination)) {
-            if (fs::is_symlink(destination))
-                throw std::runtime_error("Persistent image is a symbolic link");
-            if (imported_image(entry.path(), destination, false, progress)) break;
-            destination = target / (entry.path().stem().string() + "-" +
-                std::to_string(number++) + entry.path().extension().string());
-        }
-        if (!fs::exists(destination)) {
-            copy_verified(entry.path(), destination, progress);
-            if (!imported_image(entry.path(), destination, true))
-                throw std::runtime_error("Imported image changed during verification");
-        }
-    }
-}
-
 void import_user(const fs::path& source, const fs::path& target) {
     if (!fs::exists(source)) return;
     if (fs::is_symlink(source)) throw std::runtime_error("User directory is a symbolic link");
@@ -187,14 +123,12 @@ std::string title_id(const fs::path& param) {
     throw std::runtime_error("Cannot determine this application's title ID");
 }
 
-Result prepare(const Paths& paths, bool include_images) {
+Result prepare(const Paths& paths) {
     prepared_paths = paths;
     Result result{paths.root / "user", paths.root / "images", {}};
     try {
         directory(result.user);
         directory(result.images);
-        if (include_images) import_images(paths.app, result.images);
-        if (include_images) import_images(paths.previous, result.images);
         // Live writable saves precede packaged defaults. Existing protected files win.
         if (!paths.download.empty()) import_user(paths.download / "user", result.user);
         import_user(paths.app / "user", result.user);
@@ -238,15 +172,108 @@ std::vector<Disc> scan(const ProgressCallback& progress, const std::vector<fs::p
     const auto& paths = *prepared_paths;
     const auto images = paths.root / "images";
     report(progress,Phase::Search,{},0,0);
-    for (const auto& source : {paths.download,paths.app,paths.previous}) {
-        if (!source.empty()) import_images(source,images,progress);
-    }
+    // Discovery never imports images. In particular, deleting a protected ISO
+    // must not cause a surviving app/backup copy to be silently restored.
     auto result = discs(images,progress);
     for (const auto& extra : additional) {
         auto found = discs(extra,progress);
         result.insert(result.end(),found.begin(),found.end());
     }
     return result;
+}
+
+std::vector<BrowseEntry> browse(const fs::path& requested, const ProgressCallback& progress) {
+    const auto folder = requested.lexically_normal();
+    if (!folder.is_absolute() || fs::is_symlink(folder))
+        throw std::runtime_error("Cannot open this folder.");
+    std::vector<BrowseEntry> result;
+    std::uint64_t checked = 0;
+    for (const auto& entry : fs::directory_iterator(folder)) {
+        report(progress,Phase::Search,entry.path(),++checked,0);
+        std::error_code ec;
+        if (entry.is_symlink(ec) || ec) continue;
+        if (entry.is_directory(ec) && !ec) {
+            result.push_back({entry.path(),true});
+            continue;
+        }
+        if (!entry.is_regular_file(ec) || ec) continue;
+        std::string extension = entry.path().extension().string();
+        std::transform(extension.begin(),extension.end(),extension.begin(),
+            [](unsigned char c) { return char(std::tolower(c)); });
+        if (extension == ".iso" || extension == ".gcm")
+            result.push_back({entry.path(),false});
+    }
+    std::sort(result.begin(),result.end(),[](const BrowseEntry& a,const BrowseEntry& b) {
+        if (a.directory != b.directory) return a.directory;
+        return a.path.filename() < b.path.filename();
+    });
+    report(progress,Phase::Search,folder,checked,checked);
+    return result;
+}
+
+namespace {
+bool inside(const fs::path& path,const fs::path& root) {
+    if (root.empty()) return false;
+    auto value = path.lexically_normal(), base = root.lexically_normal();
+    while (base != base.root_path() && base.filename().empty()) base = base.parent_path();
+    auto a = value.begin(), b = base.begin();
+    for (; b != base.end(); ++a,++b) {
+        if (a == value.end() || *a != *b) return false;
+    }
+    return true;
+}
+}
+
+bool requires_move(const fs::path& source) {
+    if (!prepared_paths) throw std::runtime_error("Protected disc folder is unavailable");
+    const auto& paths = *prepared_paths;
+    return inside(source,paths.app) || inside(source,paths.download) ||
+           inside(source,paths.previous) ||
+           inside(source,fs::path("/data/homebrew") / paths.root.filename());
+}
+
+fs::path move_selected(const fs::path& requested, const ProgressCallback& progress) {
+    const auto source = requested.lexically_normal();
+    if (!source.is_absolute() || fs::is_symlink(source) || !fs::is_regular_file(source))
+        throw std::runtime_error("Source data is not a regular file");
+    // Images on USB or elsewhere outside this app already survive its updates.
+    if (!requires_move(source)) return source;
+    const auto candidates = discs(source.parent_path(),progress);
+    if (std::none_of(candidates.begin(),candidates.end(),[&](const Disc& disc) { return disc.path == source; }))
+        throw std::runtime_error("The selected game is not supported by Dusklight.");
+    const auto images = prepared_paths->root / "images";
+    directory(images);
+    auto target = images / source.filename();
+    const auto original_size = fs::file_size(source);
+    const auto original_time = fs::last_write_time(source);
+    unsigned number = 1;
+    bool already_equal = false;
+    while (fs::exists(target) || fs::is_symlink(target)) {
+        if (fs::is_symlink(target)) throw std::runtime_error("Persistent image is a symbolic link");
+        if (fs::is_regular_file(target) && equal_files(source,target,progress)) {
+            already_equal = true;
+            break;
+        }
+        target = images / (source.stem().string()+"-"+std::to_string(number++)+source.extension().string());
+    }
+    report(progress,Phase::Search,source,0,0);
+    if (!already_equal) {
+        std::error_code error;
+        fs::rename(source,target,error);
+        if (!error) return target; // same filesystem: no second allocation or copy
+        if (error != std::errc::cross_device_link)
+            throw fs::filesystem_error("Cannot move this ISO. Move it outside the app folder with your file manager.",source,target,error);
+        copy_verified(source,target,progress);
+    }
+    // A different filesystem needs a temporary verified copy. An explicit Move
+    // request authorizes removing only this selected source, never sibling ISOs.
+    report(progress,Phase::Verify,source,original_size,original_size);
+    if (fs::file_size(source) != original_size || fs::last_write_time(source) != original_time)
+        throw std::runtime_error("Source changed during move. Both files were retained.");
+    std::error_code error;
+    if (!fs::remove(source,error) || error)
+        throw std::runtime_error("The ISO is protected, but its original could not be removed. Both files were retained.");
+    return target;
 }
 
 std::string startup_disc(const std::string& saved, const fs::path& directory) {

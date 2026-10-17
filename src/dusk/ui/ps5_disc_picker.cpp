@@ -1,8 +1,10 @@
 #include "ps5_disc_picker.hpp"
 #ifdef __PROSPERO__
 #include "localization.hpp"
-#include "modal.hpp"
+#include "list.hpp"
+#include "window.hpp"
 #include "format.hpp"
+#include "dusk/settings.h"
 #if __has_include("ps5_storage.h")
 #include "ps5_storage.h"
 #else
@@ -18,164 +20,271 @@
 
 namespace dusk::ui {
 namespace {
-bool scan_open = false;
+namespace fs = std::filesystem;
+bool browser_open = false;
 using Selected = std::function<void(std::string)>;
 
-void show_choices(std::vector<ps5_storage::Disc> discs, const std::string& error, Selected selected) {
-    Modal::Props props{.title = "Select Disc Image"};
-    if (!error.empty()) {
-        props.bodyText = localization::translate(error);
-        props.icon = "warning";
-    } else if (discs.empty()) {
-        const char* folder = std::getenv("DUSK_PS5_IMAGES");
-        props.bodyText = localization::translate("No disc image found.") + "\n" +
-            std::string(folder ? folder : "") + "\n/mnt/usb0\n/mnt/usb1";
-    } else {
-        props.bodyText = "Choose a GameCube disc image. A changed disc takes effect after restarting Dusklight.";
-        for (const auto& disc : discs) {
-            props.actions.push_back({
-                .label = disc.path.filename().string()+" ("+disc.region+")",
-                .onPressed = [path=disc.path.string(),selected](Modal& modal) {
-                    modal.pop();
-                    selected(path);
-                },
-            });
-        }
-    }
-    props.actions.push_back({.label="Cancel",.onPressed=[](Modal& modal) { modal.pop(); }});
-    props.isVertical = true;
-    if (auto* host = top_document()) host->push(std::make_unique<Modal>(std::move(props)));
-}
+struct Row {
+    fs::path path;
+    bool directory = false;
+    std::string label;
+};
 
-class ScanWindow final : public WindowSmall {
+class FileBrowser final : public WindowSmall {
 public:
-    explicit ScanWindow(Selected selected) : WindowSmall("modal"), mSelected(std::move(selected)) {
+    explicit FileBrowser(Selected selected) : WindowSmall("modal"), mSelected(std::move(selected)) {
+        mRoot->SetProperty("width","80vw");
+        mRoot->SetProperty("max-width","1000dp");
         auto* header = append(mDialog,"modal-header");
-        append_text(append(header,"modal-title"),"Preparing disc selection");
-        auto* icon = append(header,"icon");
-        icon->SetClass("verifying",true);
+        append_text(append(header,"modal-title"),"Select Disc Image");
         auto* body = append(mDialog,"modal-body");
-        append_text(append(body,"div"),"Your menu stays visible while files are checked. Original files are retained.");
-        auto* content = append(body,"verification-progress");
-        mStage = append(content,"div");
-        mFile = append(content,"file-path");
-        mBar = append(content,"progress");
+        mHelp = append(body,"div");
+        mPath = append(body,"file-path");
+        mPath->SetProperty("word-break","break-all");
+        mStage = append(body,"div");
+        mBar = append(body,"progress");
         mBar->SetClass("info",true);
-        mDetail = append(content,"small");
-        set_text_content(mStage,"Searching disc images...");
-        mBar->SetAttribute("value",0.f);
+        mDetail = append(body,"small");
+        mList = std::make_unique<List>(body,List::Props{
+            .items={}, .onPressed=[this](std::uint64_t key) { choose(key); },
+        });
+        mList->root()->SetProperty("height","34vh");
+        mList->root()->SetProperty("flex","0 0 auto");
         auto* actions = append(mDialog,"modal-actions");
-        mCancelButton = std::make_unique<Button>(actions,"Cancel");
-        mCancelButton->root()->SetClass("modal-btn",true);
-        mCancelButton->on_pressed([this] { cancel(); });
+        mPlacesButton = button(actions,"Locations",[this] { if (!mBusy) locations(); });
+        mUpButton = button(actions,"Back",[this] { if (!mBusy) back(); });
+        mMoveButton = button(actions,"Move and use ISO",[this] {
+            if (!mBusy && !mAwaitMove.empty()) begin(Mode::Move,mAwaitMove);
+        });
+        mCancelButton = button(actions,"Cancel",[this] { cancel(); });
+        locations(); // no directory scan, import, or ISO copy on opening
     }
-    ~ScanWindow() override {
+    ~FileBrowser() override {
         mCancel.store(true,std::memory_order_relaxed);
         if (mWorker.joinable()) mWorker.join();
-        if (!mFinished) scan_open = false;
+        if (!mFinished) browser_open = false;
     }
     void update() override {
         WindowSmall::update();
         if (mFinished) return;
-        if (mCancel.load(std::memory_order_relaxed) && !mWorker.joinable()) {
-            finish(false);
-            return;
-        }
-        // Allow the window/background to paint before starting disk I/O.
-        if (++mFrames == 2) {
+        mList->update();
+        if (!mBusy) return;
+        if (mCancel.load(std::memory_order_relaxed) && !mWorker.joinable()) { close(); return; }
+        // Paint the menu and browser before accessing a possibly slow drive.
+        if (mQueued && ++mFrames >= 2) {
+            mQueued = false;
+            const auto mode=mMode;
+            const auto path=mTaskPath;
             try {
-                mWorker = std::thread([this] {
+                mWorker=std::thread([this,mode,path] {
                     try {
-                        if (const char* error = std::getenv("DUSK_PS5_STORAGE_ERROR"))
-                            throw std::runtime_error(error);
-                        mDiscs = ps5_storage::scan([this](const ps5_storage::Progress& value) {
+                        const auto progress=[this](const ps5_storage::Progress& value) {
                             if (mCancel.load(std::memory_order_relaxed)) return false;
-                            std::lock_guard guard(mMutex);
-                            mProgress = value;
-                            return true;
-                        },{"/mnt/usb0","/mnt/usb1"});
-                    } catch (const std::exception& error) {
-                        mError = error.what();
-                    } catch (...) {
-                        mError = "Unable to read the selected file.";
-                    }
+                            std::lock_guard guard(mMutex); mProgress=value; return true;
+                        };
+                        if (mode==Mode::Browse) mResultRows=ps5_storage::browse(path,progress);
+                        else mResultPath=ps5_storage::move_selected(path,progress);
+                    } catch (const std::exception& error) { mError=error.what(); }
+                      catch (...) { mError="Unable to read the selected file."; }
                     mDone.store(true,std::memory_order_release);
                 });
             } catch (const std::exception& error) {
-                mError = error.what();
-                mDone.store(true,std::memory_order_release);
+                mError=error.what(); mDone.store(true,std::memory_order_release);
             }
         }
+        ++mPulse;
         if (mDone.load(std::memory_order_acquire)) {
             if (mWorker.joinable()) mWorker.join();
-            finish(!mCancel.load(std::memory_order_relaxed));
+            mBusy=false;
+            if (mCancel.load(std::memory_order_relaxed)) { close(); return; }
+            if (mError.empty() && mMode==Mode::Move) {
+                auto selected=mSelected;
+                const auto path=mResultPath.string();
+                close(); selected(path); return;
+            }
+            if (mMode==Mode::Browse && mError.empty()) {
+                mRows.clear();
+                for (const auto& entry:mResultRows) mRows.push_back({entry.path,entry.directory,
+                    entry.path.filename().string()+(entry.directory?"/":"")});
+                show_rows();
+            } else {
+                show_rows();
+                set_text_content(mStage,mMode==Mode::Browse?"Cannot open this folder.":"Could not move this ISO.");
+                set_text_content(mDetail,mError);
+            }
+            focus();
             return;
         }
         if (mCancel.load(std::memory_order_relaxed)) return;
         ps5_storage::Progress state;
-        { std::lock_guard guard(mMutex); state = mProgress; }
-        const char* stage = state.phase == ps5_storage::Phase::Copy ? "Backing up ISO..." :
-            state.phase == ps5_storage::Phase::Verify ? "Verifying backup..." : "Searching disc images...";
-        set_text_content(mStage,stage);
-        set_text_content(mFile,state.file);
+        { std::lock_guard guard(mMutex); state=mProgress; }
+        const char* label=state.phase==ps5_storage::Phase::Copy?"Moving selected ISO...":
+            state.phase==ps5_storage::Phase::Verify?"Verifying moved ISO...":"Reading folder...";
+        set_text_content(mStage,label);
         if (state.total) {
-            const auto fraction = std::clamp(float(state.completed)/float(state.total),0.f,1.f);
+            const auto fraction=std::clamp(float(state.completed)/float(state.total),0.f,1.f);
             mBar->SetAttribute("value",fraction);
-            if (state.phase == ps5_storage::Phase::Search) {
-                set_text_content(mDetail,localization::translate("Files checked")+": "+
-                    fmt::format("{} / {}",state.completed,state.total));
-            } else {
+            if (state.phase==ps5_storage::Phase::Search)
+                set_text_content(mDetail,localization::translate("Files checked")+": "+fmt::format("{} / {}",state.completed,state.total));
+            else {
                 constexpr ByteFormat format{.gibFractionDigits=2,.mibFractionDigits=0};
-                set_text_content(mDetail,fmt::format("{} / {} ({:.0f}%)",
-                    format_bytes(state.completed,format),format_bytes(state.total,format),fraction*100.f));
+                set_text_content(mDetail,fmt::format("{} / {} ({:.0f}%)",format_bytes(state.completed,format),
+                    format_bytes(state.total,format),fraction*100.f));
             }
         } else {
-            // Directory enumeration has no known total. Animate a pulse and do
-            // not display a fabricated percentage until a real total is known.
-            mBar->SetAttribute("value",0.15f+0.7f*float(mFrames%120)/120.f);
-            set_text_content(mDetail,"Searching disc images...");
+            mBar->SetAttribute("value",0.15f+0.7f*float(mPulse%120)/120.f);
+            set_text_content(mDetail,localization::translate("Files checked")+": "+std::to_string(state.completed));
         }
     }
-    bool focus() override { return mCancelButton->focus(); }
+    bool focus() override {
+        if (mBusy) return mCancelButton->focus();
+        if (!mAwaitMove.empty()) return mMoveButton->focus();
+        return mList->focus() || mUpButton->focus() || mCancelButton->focus();
+    }
 protected:
-    bool handle_nav_command(Rml::Event& event, NavCommand command) override {
-        if (command == NavCommand::Cancel || command == NavCommand::Menu) {
-            cancel(); event.StopPropagation(); return true;
+    bool handle_nav_command(Rml::Event& event,NavCommand command) override {
+        if (command==NavCommand::Cancel || command==NavCommand::Menu) {
+            if (mBusy) cancel(); else back();
+            event.StopPropagation(); return true;
         }
-        return false;
+        // List handles its rows; allow controller movement between the list
+        // and the footer, and between visible footer buttons.
+        std::vector<Button*> buttons;
+        if (mAwaitMove.empty()) buttons.push_back(mPlacesButton.get());
+        buttons.push_back(mUpButton.get());
+        if (!mAwaitMove.empty()) buttons.push_back(mMoveButton.get());
+        buttons.push_back(mCancelButton.get());
+        const auto target=event.GetTargetElement();
+        auto current=std::find_if(buttons.begin(),buttons.end(),[target](Button* b) { return b->contains(target); });
+        bool handled=false;
+        if (command==NavCommand::Down && mList->contains(target)) handled=buttons.front()->focus();
+        else if (command==NavCommand::Up && current!=buttons.end() && !mBusy && mAwaitMove.empty()) handled=mList->focus_from(command);
+        else if (current!=buttons.end() && (command==NavCommand::Left || command==NavCommand::Right)) {
+            const int step=command==NavCommand::Left?-1:1;
+            for (int i=int(current-buttons.begin())+step;i>=0 && i<int(buttons.size());i+=step)
+                if (buttons[i]->focus()) { handled=true; break; }
+        }
+        if (handled) event.StopPropagation();
+        return handled;
     }
 private:
+    enum class Mode { Browse,Move };
+    std::unique_ptr<Button> button(Rml::Element* parent,const char* text,ButtonCallback pressed) {
+        auto result=std::make_unique<Button>(parent,text);
+        result->root()->SetClass("modal-btn",true);
+        result->on_pressed(std::move(pressed));
+        return result;
+    }
+    void normal_view() {
+        mAwaitMove.clear();
+        mList->root()->SetProperty("display","flex");
+        mBar->SetProperty("display","none");
+        mMoveButton->root()->SetProperty("display","none");
+        mPlacesButton->root()->SetProperty("display","block");
+        mPlacesButton->set_disabled(false);
+        mUpButton->set_disabled(mFolder.empty());
+        set_text_content(mHelp,"Open a folder and choose your ISO.");
+        set_text_content(mPath,mFolder.empty()?localization::translate("Locations"):mFolder.string());
+    }
+    void show_rows() {
+        normal_view();
+        set_text_content(mStage,""); set_text_content(mDetail,"");
+        std::vector<List::Item> items;
+        for (std::size_t i=0;i<mRows.size();++i) items.push_back({i,mRows[i].label});
+        mList->set_items(std::move(items));
+        mList->update();
+    }
+    void locations() {
+        if (mBusy) return;
+        mFolder.clear(); mRows.clear();
+        auto add=[this](const char* label,const fs::path& path) {
+            if (!path.empty()) mRows.push_back({path,true,localization::translate(label)+"  ("+path.string()+")"});
+        };
+        const auto last=fs::path(getSettings().backend.isoPath.getValue()).parent_path();
+        if (!last.empty()) add("Last used folder",last);
+        if (const char* images=std::getenv("DUSK_PS5_IMAGES")) add("Protected ISOs",images);
+        add("USB 0","/mnt/usb0"); add("USB 1","/mnt/usb1");
+        add("Data storage","/data");
+        const char* app=std::getenv("DUSK_PS5_APP_ROOT");
+        add("Application folder",app?app:"/app0");
+        add("File system","/");
+        show_rows();
+    }
+    void back() {
+        if (!mAwaitMove.empty()) { show_rows(); return; }
+        if (mFolder.empty()) { close(); return; }
+        if (mFolder==mFolder.root_path()) locations();
+        else begin(Mode::Browse,mFolder.parent_path());
+    }
+    void choose(std::uint64_t key) {
+        if (mBusy || key>=mRows.size()) return;
+        const auto row=mRows[key];
+        if (row.directory) { begin(Mode::Browse,row.path); return; }
+        try {
+            if (ps5_storage::requires_move(row.path)) {
+                mAwaitMove=row.path;
+                mList->root()->SetProperty("display","none");
+                mPlacesButton->root()->SetProperty("display","none");
+                mMoveButton->root()->SetProperty("display","block");
+                mUpButton->set_disabled(false);
+                set_text_content(mHelp,"This ISO is inside the app folder. Move it outside before using it so a store update cannot remove it. No permanent second copy is needed.");
+                set_text_content(mPath,row.path.string());
+                mMoveButton->focus(); return;
+            }
+            auto selected=mSelected;
+            close(); selected(row.path.string()); // no copy for USB or external folders
+        } catch (const std::exception& error) { set_text_content(mStage,error.what()); }
+    }
+    void begin(Mode mode,const fs::path& requested) {
+        if (mBusy) return;
+        auto path=requested.lexically_normal();
+        while (path!=path.root_path() && path.filename().empty()) path=path.parent_path();
+        if (mode==Mode::Browse) { mFolder=path; mRows.clear(); }
+        mMode=mode; mTaskPath=path;
+        mBusy=true; mQueued=true; mFrames=0; mPulse=0;
+        mError.clear(); mResultRows.clear(); mResultPath.clear(); mProgress={};
+        mCancel.store(false,std::memory_order_relaxed); mDone.store(false,std::memory_order_relaxed);
+        mList->root()->SetProperty("display","none");
+        mBar->SetProperty("display","block"); mBar->SetAttribute("value",0.f);
+        mMoveButton->root()->SetProperty("display","none");
+        mPlacesButton->set_disabled(true); mUpButton->set_disabled(true);
+        set_text_content(mPath,path.string());
+        set_text_content(mStage,mode==Mode::Browse?"Reading folder...":"Moving selected ISO...");
+        set_text_content(mDetail,"");
+        mCancelButton->focus();
+    }
     void cancel() {
+        if (!mBusy) { close(); return; }
         mCancel.store(true,std::memory_order_relaxed);
         mCancelButton->set_text("Cancelling...");
         mCancelButton->set_disabled(true);
     }
-    void finish(bool show_result) {
-        mFinished = true;
-        scan_open = false;
-        pop();
-        if (show_result) show_choices(std::move(mDiscs),mError,mSelected);
+    void close() {
+        mFinished=true; browser_open=false; pop();
     }
     Selected mSelected;
     std::thread mWorker;
     std::mutex mMutex;
     ps5_storage::Progress mProgress;
-    std::vector<ps5_storage::Disc> mDiscs;
+    std::vector<Row> mRows;
+    std::vector<ps5_storage::BrowseEntry> mResultRows;
+    fs::path mFolder,mTaskPath,mAwaitMove,mResultPath;
     std::string mError;
     std::atomic_bool mDone{false},mCancel{false};
-    bool mFinished = false;
-    unsigned mFrames = 0;
-    Rml::Element *mStage=nullptr,*mFile=nullptr,*mBar=nullptr,*mDetail=nullptr;
-    std::unique_ptr<Button> mCancelButton;
+    bool mBusy=false,mQueued=false,mFinished=false;
+    Mode mMode=Mode::Browse;
+    unsigned mFrames=0,mPulse=0;
+    Rml::Element *mHelp=nullptr,*mPath=nullptr,*mStage=nullptr,*mBar=nullptr,*mDetail=nullptr;
+    std::unique_ptr<List> mList;
+    std::unique_ptr<Button> mPlacesButton,mUpButton,mMoveButton,mCancelButton;
 };
 }
 
 void open_ps5_disc_picker(Selected selected) {
-    if (scan_open) return;
-    if (auto* host = top_document()) {
-        auto window = std::make_unique<ScanWindow>(std::move(selected));
-        scan_open = true;
-        host->push(std::move(window));
+    if (browser_open) return;
+    if (auto* host=top_document()) {
+        auto window=std::make_unique<FileBrowser>(std::move(selected));
+        browser_open=true; host->push(std::move(window));
     }
 }
 }

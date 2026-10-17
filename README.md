@@ -16,18 +16,24 @@ with the USA GameCube disc, GZ2E01 revision 0. This branch exposes the engine's 
 European/PAL GameCube support, GZ2P01 revision 0, through the PS5 startup and disc picker.
 
 Extract the ZIP and upload `output/PPSA99640` to your native-title location.
-Put your raw `.iso` or `.gcm` in `/data/dusklight/PPSA99640/images/`, or place it
-beside `eboot.bin` for a verified import from **Select Disc Image**. Register the title with your
-normal launcher or PS5 Upload. See [installation instructions](ps5/INSTALL.txt).
-The PS5 disc picker lists protected images and remembers the selection; discovery runs only when **Select Disc Image** is opened. Close the title before adding images.
+Register the title with your normal launcher or PS5 Upload. **Select Disc Image**
+opens a controller-operated folder/file browser: choose an ISO/GCM on USB or
+outside the app folder, including nested directories. Its original path is used
+and remembered; an internal copy is not needed. A fresh installation does not
+need any preconfigured ISO location. See [installation instructions](ps5/INSTALL.txt).
 
-Images and the complete `user/` tree are copied outside the replaced app folder
-to `/data/dusklight/<TITLEID>/images` and `user`. The initial import needs extra
-free space and one completed **Select Disc Image** import before a Store update.
-The menu appears first; a cancelable progress window shows ISO search, backup
-and verification over its existing image. Originals are retained,
-copies are byte-verified, and interrupted copies restart safely. Existing protected saves
-win over imported files. This does not recover data already deleted before import.
+For a disc beside `eboot.bin`, choose **Move and use ISO** in the browser before
+playing or installing a future Store update. Only that selected file is moved
+to `/data/dusklight/<TITLEID>/images/`; same-name different files are preserved.
+There is no automatic ISO copy or restoration of deleted ISOs. A rename on the
+same filesystem avoids a second allocation; crossing filesystems needs temporary
+copy space and byte verification before removing the selected original. Progress
+and cancel stay visible over the menu image. Unselected files are left in place.
+
+The `user/` tree is migrated to `/data/dusklight/<TITLEID>/user/`, with existing
+protected saves taking priority. Before the first upgrade from an unprotected
+old version, preserve its personal files: code cannot recover files already
+deleted by an installer. An ISO left in the replaceable app folder remains at risk.
 
 ## Features and testing
 

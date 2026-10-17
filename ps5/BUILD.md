@@ -46,10 +46,12 @@ Dawn's actual fetched source revisions and CMake dependency snapshots, with hash
 Release validation rejects private data and unexpected runtime modules.
 Use a new staging directory/version rather than overwriting an existing package.
 
-`default-config.json` is the initial console preset. Runtime data protection imports
-existing images and user files to `/data/dusklight/<TITLEID>/`, outside the app directory.
-Let one launch finish before replacing the app through a Store update. The installer
-also preserves an existing app-local `user/config.json`.
+`default-config.json` is the initial console preset. Saves/settings migrate to
+`/data/dusklight/<TITLEID>/user/`. The folder browser uses externally selected
+ISOs in place. An app-local ISO needs an explicit **Move and use ISO** action to
+move outside the replaced folder before a Store update; no ISO is copied on
+startup or merely opening the browser. Preserve old personal files before the
+first upgrade. See `PAL-UI-TESTING.md` for move/cancel and publication limits.
 
 ## Optional textures
 

@@ -42,7 +42,8 @@ for code in ('de','fr','es','it'):
         assert value.strip() and '<' not in value and '>' not in value,(code,key)
         assert fields(key) == fields(value),(code,key)
     for key in ('Searching disc images...','Backing up ISO...','Verifying backup...',
-                'Preparing disc selection','Menu language','Files checked'):
+                'Preparing disc selection','Menu language','Files checked',
+                'Locations','Move and use ISO','Reading folder...','No items'):
         assert key in translated,(code,key)
 
 with tempfile.TemporaryDirectory(prefix='dusklight-ui-art-') as temporary:

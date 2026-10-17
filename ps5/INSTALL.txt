@@ -4,17 +4,19 @@ Requires a jailbroken PS5 with a compatible native-title loader.
 Tested on firmware 9.00 using kstuff and ShadowMount. No game dump or texture pack is included.
 
 1. Extract the ZIP. The title is output/PPSA99640.
-2. Add your own USA or European/PAL GameCube revision-0 raw ISO or GCM to
-   /data/dusklight/PPSA99640/images/. Names other than game.iso are accepted.
-   Alternatively put it beside eboot.bin; the first launch imports it safely.
+2. Place your own USA or European/PAL GameCube revision-0 raw ISO or GCM on USB
+   or in a data folder outside the app, for example /data/dusklight/PPSA99640/images/.
+   Select Disc Image opens a folder browser; nested USB folders are supported.
+   The chosen path is used directly, without an internal copy.
    Wii discs are unsupported. Convert compressed GameCube images (including
    RVZ/CISO) to raw ISO before copying them; changing the filename is insufficient.
-3. Close the title before installing or updating. Let the first data import finish
-   before a Store update: images and user/ are copied and byte-verified under
-   /data/dusklight/PPSA99640/, outside the app folder. Keep this data directory.
-   The launch picture can remain visible for several minutes during copying and
-   verification. Leave the title running until its menu appears. Originals are
-   retained; interrupted copies restart safely. Additional free space is needed.
+3. Close the title before installing or updating. Preserve old personal files
+   before the first upgrade. For an ISO already beside eboot.bin, explicitly
+   choose Move and use ISO in the browser before a future Store update. Only that
+   selected file moves to /data/dusklight/PPSA99640/images/. A rename needs no
+   duplicate allocation; crossing filesystems needs temporary copy space and
+   verification before the selected original is removed. Cancel/error retains it.
+   Starting the app or opening a folder never copies or restores an ISO.
 4. Upload the complete title folder to /mnt/ext1/etaHEN/games/PPSA99640 with any FTP client.
    Linux/macOS: bash tools/install.sh --src output/PPSA99640 --console <console-ip>
    Windows: powershell -ExecutionPolicy Bypass -File tools/install.ps1 -Src output/PPSA99640 -Console <console-ip>
@@ -25,7 +27,7 @@ Controls: Cross=A, Circle=B, Square=X, Triangle=Y, Options=Start.
 Touchpad opens Dusklight settings. Sticks control movement/camera; L2/R2 are triggers.
 
 Startup interface language:
-Choose Settings -> Interface -> Menu language (Einstellungen -> Oberfläche -> Menüsprache), select English or Deutsch,
+Choose Settings -> Interface -> Menu language (Einstellungen -> Oberfläche -> Menüsprache), select English, Français, Deutsch, Español or Italiano,
 then close and reopen the app. The preference survives app-folder replacement.
 It controls the startup interface independently from game text. Common settings
 labels are translated too; advanced help without a translation remains English.
@@ -52,15 +54,17 @@ Do not include downloaded/converted texture packs in public releases without the
 Read LEGAL.txt and the included license notices. Corresponding source accompanies the GitHub release.
 
 Disc selection and updates:
-The PS5 Select Disc Image button uses an in-app controller-operated list, because
-desktop file dialogs are unavailable on the console. It lists supported protected
-images and uses Dusklight's existing verification. A changed disc requires a restart.
-One available image is selected automatically; multiple images require a selection.
+The PS5 Select Disc Image button uses an in-app controller folder/file browser.
+Choose a location, navigate folders and select an ISO/GCM. A fresh installation
+needs no saved path. Use Cross to open/select, Circle/Back to return, and Cancel
+to leave. Reading folders and explicit moves show feedback over the menu image.
+Only the selected disc goes through Dusklight's normal verification.
+A changed disc requires a restart; an available chosen path is remembered.
 Existing USA behavior, graphics presets and controller mappings are unchanged.
 
 Existing protected user files take priority, then /download0/user before app defaults.
-Top-level images and user/ in /data/prosperostore/previous/<TITLEID> are also imported
-when that Store backup is available. Different images with the same name get numbered
-names. Compressed images are preserved as data but cannot be played by this backend.
-Backups on other drives need manual recovery. Data deleted before a completed import
-cannot be recovered. No app can guarantee the behavior of an external updater.
+User data in /data/prosperostore/previous/<TITLEID> is also imported when available.
+ISO images are never imported automatically. Explicit moves preserve different
+same-name images with numbered names. Compressed images cannot be played by this
+backend. An ISO left in the replaceable app folder remains at risk. Data deleted
+before protection cannot be recovered without a surviving backup.

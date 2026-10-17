@@ -275,5 +275,22 @@
   "Your menu stays visible while files are checked. Original files are retained.": "Le menu reste visible pendant la vérification. Les fichiers d’origine sont conservés.",
   "Choose a GameCube disc image. A changed disc takes effect after restarting Dusklight.": "Choisissez une image disque GameCube. Le changement prend effet après le redémarrage de Dusklight.",
   "Files checked": "Fichiers vérifiés",
-  "Scan canceled. Original files were retained.": "Recherche annulée. Les fichiers d’origine sont conservés."
+  "Scan canceled. Original files were retained.": "Recherche annulée. Les fichiers d’origine sont conservés.",
+  "Locations": "Emplacements",
+  "Open a folder and choose your ISO.": "Ouvrez un dossier et choisissez votre ISO.",
+  "Last used folder": "Dernier dossier utilisé",
+  "Protected ISOs": "ISO hors du dossier de l’application",
+  "Data storage": "Stockage des données",
+  "Application folder": "Dossier de l’application",
+  "File system": "Système de fichiers",
+  "Reading folder...": "Lecture du dossier…",
+  "Moving selected ISO...": "Déplacement de l’ISO sélectionnée…",
+  "Verifying moved ISO...": "Vérification de l’ISO déplacée…",
+  "Move and use ISO": "Déplacer et utiliser l’ISO",
+  "Cannot open this folder.": "Impossible d’ouvrir ce dossier.",
+  "Could not move this ISO.": "Impossible de déplacer cette ISO.",
+  "This ISO is inside the app folder. Move it outside before using it so a store update cannot remove it. No permanent second copy is needed.": "Cette ISO se trouve dans le dossier de l’application. Déplacez-la hors de ce dossier avant de jouer pour la préserver des mises à jour du Store. Aucune seconde copie permanente n’est nécessaire.",
+  "No items": "Aucun élément",
+  "Source changed during move. Both files were retained.": "Le fichier source a changé pendant le déplacement. Les deux fichiers sont conservés.",
+  "The ISO is protected, but its original could not be removed. Both files were retained.": "L’ISO est à l’abri hors du dossier de l’application, mais l’original n’a pas pu être supprimé. Les deux fichiers sont conservés."
 }

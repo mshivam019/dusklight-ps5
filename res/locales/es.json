@@ -275,5 +275,22 @@
   "Your menu stays visible while files are checked. Original files are retained.": "El menú permanece visible durante la comprobación. Se conservan los archivos originales.",
   "Choose a GameCube disc image. A changed disc takes effect after restarting Dusklight.": "Elige una imagen de disco GameCube. El cambio se aplicará al reiniciar Dusklight.",
   "Files checked": "Archivos comprobados",
-  "Scan canceled. Original files were retained.": "Búsqueda cancelada. Se conservan los archivos originales."
+  "Scan canceled. Original files were retained.": "Búsqueda cancelada. Se conservan los archivos originales.",
+  "Locations": "Ubicaciones",
+  "Open a folder and choose your ISO.": "Abre una carpeta y elige tu ISO.",
+  "Last used folder": "Última carpeta utilizada",
+  "Protected ISOs": "ISO fuera de la carpeta de la aplicación",
+  "Data storage": "Almacenamiento de datos",
+  "Application folder": "Carpeta de la aplicación",
+  "File system": "Sistema de archivos",
+  "Reading folder...": "Leyendo carpeta…",
+  "Moving selected ISO...": "Moviendo la ISO seleccionada…",
+  "Verifying moved ISO...": "Verificando la ISO movida…",
+  "Move and use ISO": "Mover y usar la ISO",
+  "Cannot open this folder.": "No se puede abrir esta carpeta.",
+  "Could not move this ISO.": "No se pudo mover esta ISO.",
+  "This ISO is inside the app folder. Move it outside before using it so a store update cannot remove it. No permanent second copy is needed.": "Esta ISO está en la carpeta de la aplicación. Muévela fuera antes de jugar para que una actualización de la tienda no la elimine. No hace falta una segunda copia permanente.",
+  "No items": "Sin elementos",
+  "Source changed during move. Both files were retained.": "El archivo de origen cambió durante el traslado. Se conservaron ambos archivos.",
+  "The ISO is protected, but its original could not be removed. Both files were retained.": "La ISO está protegida, pero no se pudo eliminar el original. Se conservaron ambos archivos."
 }
