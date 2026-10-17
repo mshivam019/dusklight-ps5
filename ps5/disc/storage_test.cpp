@@ -36,11 +36,14 @@ int main(int argc,char** argv) {
     fs::create_directories(usb/"Subfolder");
     ps5_storage::Paths paths{root/"app/",root/"protected",root/"previous",root/"download"};
     put(paths.app/"user/config.json","language settings");
+    put(paths.app/"user/nested/should-not-copy.iso",payload);
     put(paths.app/"user/save.raw","packaged save");
     put(paths.download/"user/save.raw","current save");
     auto ready=ps5_storage::prepare(paths);
     assert(ready.error.empty());
     assert(get(ready.user/"save.raw")=="current save");
+    assert(!fs::exists(ready.user/"nested/should-not-copy.iso"));
+    assert(get(paths.app/"user/nested/should-not-copy.iso")==payload);
     // Fresh installation: navigate nested external folders without an internal ISO.
     const auto rows=ps5_storage::browse(usb);
     assert(rows.size()==2 && rows[0].directory && rows[0].path.filename()=="Subfolder");

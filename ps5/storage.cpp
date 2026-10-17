@@ -95,7 +95,9 @@ void import_user(const fs::path& source, const fs::path& target) {
         if (entry.is_symlink()) throw std::runtime_error("User data contains a symbolic link");
         const auto destination = target / entry.path().lexically_relative(source);
         if (entry.is_directory()) directory(destination);
-        else if (entry.is_regular_file()) {
+        // A disc placed below user/ or portable data/ is still an ISO,
+        // not a setting/save. Never duplicate it during user migration.
+        else if (entry.is_regular_file() && !image_name(entry.path())) {
             directory(destination.parent_path());
             if (fs::is_symlink(destination)) throw std::runtime_error("Persistent user file is a symbolic link");
             if (fs::exists(destination) && !fs::is_regular_file(destination))
