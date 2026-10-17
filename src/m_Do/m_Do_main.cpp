@@ -35,6 +35,11 @@
 #include "m_Do/m_Do_printf.h"
 #include "m_Do/m_Do_ext2.h"
 #include <cstring>
+#ifdef __PROSPERO__
+#include <cstdlib>
+#include <exception>
+#include "storage.h"
+#endif
 
 #include "dusk/app_info.hpp"
 #include "dusk/audio/DuskAudioSystem.h"
@@ -643,6 +648,28 @@ int game_main(int argc, char* argv[]) {
 
     dusk::config::load_from_user_preferences();
     ApplyCVarOverrides(parsed_arg_options["cvar"]);
+#ifdef __PROSPERO__
+    // Restore a protected selection rather than always forcing /app0/game.iso.
+    try {
+        if (!std::getenv("DUSK_PS5_STORAGE_ERROR")) {
+            if (const char* folder = std::getenv("DUSK_PS5_IMAGES")) {
+                const auto selected = ps5_storage::startup_disc(
+                    dusk::getSettings().backend.isoPath.getValue(), folder);
+                if (selected != dusk::getSettings().backend.isoPath.getValue()) {
+                    dusk::getSettings().backend.isoPath.setValue(selected);
+                    dusk::getSettings().backend.isoVerification.setValue(dusk::DiscVerificationState::Unknown);
+                    dusk::config::save();
+                }
+            }
+        }
+    } catch (const std::exception& error) {
+        setenv("DUSK_PS5_STORAGE_ERROR", error.what(), 1);
+    }
+    if (std::getenv("DUSK_PS5_STORAGE_ERROR")) {
+        dusk::getSettings().backend.isoPath.setValue("");
+        dusk::getSettings().backend.skipPreLaunchUI.setValue(false);
+    }
+#endif
     borealis::sentry::Options sentryOptions{
         .release = fmt::format("{}@{}", dusk::AppInfo.appName, BOREALIS_APP_DESCRIBE),
         .databaseDirectory = dusk::CachePath / "sentry",
@@ -863,6 +890,7 @@ int game_main(int argc, char* argv[]) {
         if (forcePreLaunchUI && skipPreLaunchUI) {
             DuskLog.warn("Prelaunch UI was disabled with no usable DVD image, enabling prelaunch UI");
             dusk::getSettings().backend.skipPreLaunchUI.setValue(false);
+            skipPreLaunchUI = false;
             saveConfigBeforePrelaunch = true;
         }
         if (saveConfigBeforePrelaunch) {

@@ -14,9 +14,10 @@
 extern "C" {
 #endif
 
-/* Standard error into klog (each line prefixed with the title's name), and
- * the shell's splash dismissed. Call first. */
+/* Standard error into klog (each line prefixed with the title's name). Call first. */
 void platform_init(const char *title_name);
+/* Dismiss after the initial personal-data import, before rendering application frames. */
+void platform_dismiss_splash(void);
 
 /* One line to klog, flushed. */
 void say(const char *format, ...) __attribute__((format(printf, 1, 2)));

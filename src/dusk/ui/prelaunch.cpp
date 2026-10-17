@@ -33,7 +33,12 @@
 #include <exception>
 #include <filesystem>
 #include <optional>
+#include <stdexcept>
 #include <thread>
+#ifdef __PROSPERO__
+#include <cstdlib>
+#include "storage.h"
+#endif
 
 #include "m_Do/m_Do_MemCard.h"
 
@@ -787,17 +792,55 @@ void ensure_initialized() noexcept {
     state.initialCardFileType = getSettings().backend.cardFileType;
     state.errorString.clear();
     state.initialized = true;
+#ifdef __PROSPERO__
+    if (const char* error = std::getenv("DUSK_PS5_STORAGE_ERROR")) state.errorString = error;
+#endif
     refresh_configured_disc_state();
 }
 
 void open_iso_picker() noexcept {
     ensure_initialized();
+#ifdef __PROSPERO__
+    // SDL dialogs are disabled on PS5. Use the existing controller-driven UI.
+    Modal::Props props{.title = "Select Disc Image"};
+    try {
+        if (const char* error = std::getenv("DUSK_PS5_STORAGE_ERROR"))
+            throw std::runtime_error(error);
+        const char* folder = std::getenv("DUSK_PS5_IMAGES");
+        if (!folder) throw std::runtime_error("Protected disc folder is unavailable");
+        const auto available = ps5_storage::discs(folder);
+        props.bodyText = available.empty() ?
+            "Close Dusklight and copy your USA or European GameCube raw ISO to " +
+                std::string(folder) + ". Then reopen Dusklight and select it here. "
+                "Wii discs and compressed images are not supported by this PS5 backend." :
+            "Choose a protected GameCube disc image. A changed disc takes effect after restarting Dusklight.";
+        for (const auto& disc : available) {
+            props.actions.push_back(ModalAction{
+                .label = disc.path.filename().string() + " (" + disc.region + ")",
+                .onPressed = [path = disc.path.string()](Modal& modal) {
+                    modal.pop();
+                    begin_disc_verification(path);
+                },
+            });
+        }
+    } catch (const std::exception& error) {
+        props.bodyText = error.what();
+        props.icon = "warning";
+    }
+    props.actions.push_back(ModalAction{
+        .label = "Cancel",
+        .onPressed = [](Modal& modal) { modal.pop(); },
+    });
+    props.isVertical = true;
+    if (auto* host = top_document()) host->push(std::make_unique<Modal>(std::move(props)));
+#else
     borealis::file_select::open_file(
         {
             .parentWindow = aurora::window::get_sdl_window(),
             .filters = kDiscFileFilters,
         },
         &file_dialog_callback);
+#endif
 }
 
 bool is_restart_pending() noexcept {

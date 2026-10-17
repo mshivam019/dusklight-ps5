@@ -46,8 +46,10 @@ Dawn's actual fetched source revisions and CMake dependency snapshots, with hash
 Release validation rejects private data and unexpected runtime modules.
 Use a new staging directory/version rather than overwriting an existing package.
 
-`default-config.json` is the initial console preset. The installer preserves an
-existing `user/config.json`, so updating does not reset player settings or saves.
+`default-config.json` is the initial console preset. Runtime data protection imports
+existing images and user files to `/data/dusklight/<TITLEID>/`, outside the app directory.
+Let one launch finish before replacing the app through a Store update. The installer
+also preserves an existing app-local `user/config.json`.
 
 ## Optional textures
 

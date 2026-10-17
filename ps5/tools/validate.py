@@ -21,6 +21,7 @@ def main():
     parser.add_argument('--vulkan-dir', type=Path, default=ROOT.parent / 'PS5_Vulkan')
     parser.add_argument('--title', type=Path, help='Also validate a staged release title')
     args = parser.parse_args()
+    run('python3', ROOT / 'ps5/tools/test-storage.py')
     run('git', '-C', ROOT, 'diff', '--check')
     for path in (ROOT / 'ps5/tools').glob('*.py'):
         ast.parse(path.read_text(), filename=str(path))

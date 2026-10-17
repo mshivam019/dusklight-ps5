@@ -9,13 +9,22 @@ Get the Windows or Linux ZIP from [Releases](https://github.com/mshivam019/duskl
 The console title is the same in both; only the upload helper differs.
 
 No game dump, HD texture pack, saves, console firmware or keys are included.
-Supply a dump of your own legally obtained game. The initial PS5 build is tested
-with the USA GameCube disc, GZ2E01 revision 0, as a raw `game.iso`.
+Supply a dump of your own legally obtained game. The original PS5 release was tested
+with the USA GameCube disc, GZ2E01 revision 0. This branch exposes the engine's existing
+European/PAL GameCube support, GZ2P01 revision 0, through the PS5 startup and disc picker.
 
-Extract the ZIP, add `game.iso` beside `eboot.bin` in `output/PPSA99640`, and upload
-that folder to your native-title location. Register it with your normal launcher
-or PS5 Upload. See [installation instructions](ps5/INSTALL.txt).
-Close the title before updates and preserve `user/`, which contains saves and settings.
+Extract the ZIP and upload `output/PPSA99640` to your native-title location.
+Put your raw `.iso` or `.gcm` in `/data/dusklight/PPSA99640/images/`, or place it
+beside `eboot.bin` for a verified first-launch import. Register the title with your
+normal launcher or PS5 Upload. See [installation instructions](ps5/INSTALL.txt).
+The PS5 disc picker lists protected images and remembers the selection; a single
+available image is selected automatically. Close the title before adding images.
+
+Images and the complete `user/` tree are copied outside the replaced app folder
+to `/data/dusklight/<TITLEID>/images` and `user`. The initial import needs extra
+free space and one completed launch before a Store update. Originals are retained,
+copies are byte-verified, and interrupted copies resume. Existing protected saves
+win over imported files. This does not recover data already deleted before import.
 
 ## Features and testing
 
@@ -98,7 +107,10 @@ Upstream Dusklight selects languages from the supplied disc's assets:
 | European GameCube | English, German, French, Spanish, Italian |
 | Japanese GameCube | Japanese |
 
-European and Japanese discs have not been verified in this PS5 release.
+European and Japanese discs were not verified in the original PS5 release.
+PAL discovery and selection are covered by synthetic host tests; console gameplay
+of this branch still needs verification. The raw-disc backend does not support Wii,
+RVZ, CISO or other compressed images; renaming such a file does not convert it.
 Upstream exposes the language selector in its pre-launch settings when the disc
 contains multiple languages. This release skips that screen by default.
 The Dusklight settings interface is currently in English; changing game text
