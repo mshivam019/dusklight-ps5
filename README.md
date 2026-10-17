@@ -22,8 +22,10 @@ available image is selected automatically. Close the title before adding images.
 
 Images and the complete `user/` tree are copied outside the replaced app folder
 to `/data/dusklight/<TITLEID>/images` and `user`. The initial import needs extra
-free space and one completed launch before a Store update. Originals are retained,
-copies are byte-verified, and interrupted copies resume. Existing protected saves
+free space and one completed launch before a Store update. The launch picture can
+remain visible for several minutes while a full disc image is copied and checked;
+leave the title running until its menu appears. Originals are retained,
+copies are byte-verified, and interrupted copies restart safely. Existing protected saves
 win over imported files. This does not recover data already deleted before import.
 
 ## Features and testing
@@ -108,8 +110,9 @@ Upstream Dusklight selects languages from the supplied disc's assets:
 | Japanese GameCube | Japanese |
 
 European and Japanese discs were not verified in the original PS5 release.
-PAL discovery and selection are covered by synthetic host tests; console gameplay
-of this branch still needs verification. The raw-disc backend does not support Wii,
+PAL discovery and selection are covered by synthetic host tests. The first import,
+menu and PAL game startup were confirmed on PS5 on 2026-10-17; the whole game and
+a real Store update have not been tested. The raw-disc backend does not support Wii,
 RVZ, CISO or other compressed images; renaming such a file does not convert it.
 Upstream exposes the language selector in its pre-launch settings when the disc
 contains multiple languages. This release skips that screen by default.

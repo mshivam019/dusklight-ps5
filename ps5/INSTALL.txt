@@ -7,12 +7,14 @@ Tested on firmware 9.00 using kstuff and ShadowMount. No game dump or texture pa
 2. Add your own USA or European/PAL GameCube revision-0 raw ISO or GCM to
    /data/dusklight/PPSA99640/images/. Names other than game.iso are accepted.
    Alternatively put it beside eboot.bin; the first launch imports it safely.
-   Wii and compressed images (including RVZ/CISO) need conversion to GameCube raw ISO first.
+   Wii discs are unsupported. Convert compressed GameCube images (including
+   RVZ/CISO) to raw ISO before copying them; changing the filename is insufficient.
 3. Close the title before installing or updating. Let the first data import finish
    before a Store update: images and user/ are copied and byte-verified under
    /data/dusklight/PPSA99640/, outside the app folder. Keep this data directory.
-   The launch picture remains visible during the copy. Originals are retained;
-   interrupted copies can resume. The import needs additional free space.
+   The launch picture can remain visible for several minutes during copying and
+   verification. Leave the title running until its menu appears. Originals are
+   retained; interrupted copies restart safely. Additional free space is needed.
 4. Upload the complete title folder to /mnt/ext1/etaHEN/games/PPSA99640 with any FTP client.
    Linux/macOS: bash tools/install.sh --src output/PPSA99640 --console <console-ip>
    Windows: powershell -ExecutionPolicy Bypass -File tools/install.ps1 -Src output/PPSA99640 -Console <console-ip>
