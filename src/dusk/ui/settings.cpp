@@ -1,3 +1,4 @@
+#include "localization.hpp"
 #include "settings.hpp"
 
 #include "bool_button.hpp"
@@ -1467,8 +1468,7 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
             leftPane.add_select_button({
                 .key = "Menu language",
                 .getValue = [] {
-                    return Rml::String{getSettings().backend.menuLanguage.getValue() == "de"
-                                           ? "Deutsch" : "English"};
+                    return Rml::String{localization::language_name(getSettings().backend.menuLanguage.getValue())};
                 },
                 .isModified = [] {
                     return getSettings().backend.menuLanguage.getValue() !=
@@ -1477,8 +1477,9 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
             }),
             rightPane, [](Pane& pane) {
                 pane.clear();
-                for (const auto& option : std::array<std::pair<const char*, const char*>, 2>{{
-                         {"en", "English"}, {"de", "Deutsch"}}}) {
+                for (const auto& option : std::array<std::pair<const char*, const char*>, 5>{{
+                         {"en", "English"}, {"fr", "Français"}, {"de", "Deutsch"},
+                         {"es", "Español"}, {"it", "Italiano"}}}) {
                     const std::string id = option.first;
                     pane.add_button({
                         .text = option.second,

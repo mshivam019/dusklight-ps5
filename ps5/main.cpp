@@ -29,7 +29,7 @@ int main() {
         const auto title = ps5_storage::title_id("/app0/sce_sys/param.json");
         const auto root = std::filesystem::path("/data/dusklight") / title;
         const auto protected_data = ps5_storage::prepare({"/app0", root,
-            std::filesystem::path("/data/prosperostore/previous") / title, "/download0"});
+            std::filesystem::path("/data/prosperostore/previous") / title, "/download0"}, false);
         user_path = protected_data.user.string();
         setenv("DUSK_PS5_IMAGES", protected_data.images.c_str(), 1);
         if (!protected_data.error.empty()) throw std::runtime_error(protected_data.error);

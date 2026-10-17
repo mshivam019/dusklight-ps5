@@ -1649,6 +1649,7 @@ set(DUSK_FILES
         src/dusk/ui/pane.hpp
         src/dusk/ui/popover.cpp
         src/dusk/ui/popover.hpp
+        src/dusk/ui/ps5_disc_picker.cpp
         src/dusk/ui/prelaunch.cpp
         src/dusk/ui/prelaunch.hpp
         src/dusk/ui/preset.cpp

@@ -1,3 +1,5 @@
+> **Draft candidate — HOLD for console testing.** See [PAL/UI test notes](PAL-UI-TESTING.md) for the shared five-language menu, controller picker, progress display and Gary-style buttons.
+
 # Dusklight for PS5
 
 A native PS5 port of [Dusklight](https://github.com/TwilitRealm/dusklight), based on v2.0.3.
@@ -15,16 +17,15 @@ European/PAL GameCube support, GZ2P01 revision 0, through the PS5 startup and di
 
 Extract the ZIP and upload `output/PPSA99640` to your native-title location.
 Put your raw `.iso` or `.gcm` in `/data/dusklight/PPSA99640/images/`, or place it
-beside `eboot.bin` for a verified first-launch import. Register the title with your
+beside `eboot.bin` for a verified import from **Select Disc Image**. Register the title with your
 normal launcher or PS5 Upload. See [installation instructions](ps5/INSTALL.txt).
-The PS5 disc picker lists protected images and remembers the selection; a single
-available image is selected automatically. Close the title before adding images.
+The PS5 disc picker lists protected images and remembers the selection; discovery runs only when **Select Disc Image** is opened. Close the title before adding images.
 
 Images and the complete `user/` tree are copied outside the replaced app folder
 to `/data/dusklight/<TITLEID>/images` and `user`. The initial import needs extra
-free space and one completed launch before a Store update. The launch picture can
-remain visible for several minutes while a full disc image is copied and checked;
-leave the title running until its menu appears. Originals are retained,
+free space and one completed **Select Disc Image** import before a Store update.
+The menu appears first; a cancelable progress window shows ISO search, backup
+and verification over its existing image. Originals are retained,
 copies are byte-verified, and interrupted copies restart safely. Existing protected saves
 win over imported files. This does not recover data already deleted before import.
 
@@ -115,8 +116,8 @@ menu and PAL game startup were confirmed on PS5 on 2026-10-17; the whole game an
 a real Store update have not been tested. The raw-disc backend does not support Wii,
 RVZ, CISO or other compressed images; renaming such a file does not convert it.
 Upstream exposes the language selector in its pre-launch settings when the disc
-contains multiple languages. This release skips that screen by default.
-The startup interface supports English and German. Choose **Settings → Interface →
+contains multiple languages. The first launch exposing menu-language settings shows the startup menu.
+The startup interface supports English, French, German, Spanish and Italian. Choose **Settings → Interface →
 Menu language** (**Einstellungen → Oberfläche → Menüsprache**), then close and reopen the app. This setting is
 stored separately from game language. The first launch introducing this setting
 shows the menu once, including on older installs that previously skipped it.
@@ -124,15 +125,14 @@ The catalog also translates common settings labels; untranslated advanced help
 text falls back to English.
 
 On PS5, built-in button artwork follows the default controls: Cross for A, Circle
-for B, Square for X, Triangle for Y, L2 for L, R2 for R and R1 for Z. It extends
-[Gary Riches' PS5_Dusklight](https://github.com/griches/PS5_Dusklight) with complete
-CC0 Kenney button caps and the separate inline icons used by inventory and dialogues.
-The old GameCube backing shapes are suppressed only for the exact button resources;
-neutral tinting and square quads prevent old colours and bean shapes showing through.
+for B, Square for X, Triangle for Y, L2 for L, R2 for R and R1 for Z. It uses
+[Gary Riches' PS5_Dusklight](https://github.com/griches/PS5_Dusklight) HUD glyphs
+and shaded original button bodies, including blue Cross and red Circle. Inline
+inventory/dialogue icons have independent shaded caps and L2/R2/R1 labels.
 Options and stick prompts also use independent PS5 artwork.
 The artwork is loaded through the existing texture-replacement system; user
 texture packs retain higher priority, and disabling replacements disables it.
-Remapping controls does not dynamically redraw the artwork. All 25 resource
+Remapping controls does not dynamically redraw the artwork. The original resource
 identifiers were matched against a private PAL disc; console appearance and layout
 still require manual testing. Graphics settings and game simulation are unchanged.
 

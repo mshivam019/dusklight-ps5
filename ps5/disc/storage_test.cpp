@@ -82,5 +82,50 @@ int main(int argc, char** argv) {
     bool rejected = false;
     try { ps5_storage::title_id(root / "param.json"); } catch (...) { rejected = true; }
     assert(rejected);
-    std::cout << "PAL/USA selection, interrupted copy, update survival, image collisions, save priority and symlinks: PASS\n";
+    // Startup migrates settings without touching the ISO. I/O begins only
+    // after the visible picker has asked for a scan.
+    ps5_storage::Paths deferred{root / "deferred-app",root / "deferred-data",root / "missing",{}};
+    const auto payload = image("GZ2P01") + std::string(256*1024,'x');
+    put(deferred.app / "game.iso",payload);
+    put(deferred.app / "user/config.json","retain menu language");
+    auto ready = ps5_storage::prepare(deferred,false);
+    assert(ready.error.empty());
+    assert(get(ready.user / "config.json") == "retain menu language");
+    assert(!fs::exists(ready.images / "game.iso"));
+    for (const auto phase : {ps5_storage::Phase::Copy,ps5_storage::Phase::Verify}) {
+        bool canceled = false, sawProgress = false;
+        try {
+            ps5_storage::scan([&](const ps5_storage::Progress& progress) {
+                assert(!progress.total || progress.completed <= progress.total);
+                if (progress.phase == phase && progress.completed > 0) {
+                    sawProgress = true;
+                    return false;
+                }
+                return true;
+            });
+        } catch (const std::exception&) { canceled = true; }
+        assert(canceled && sawProgress);
+        assert(get(deferred.app / "game.iso") == payload);
+        assert(!fs::exists(ready.images / "game.iso"));
+    }
+    bool copied = false, verified = false, searched = false;
+    const auto found = ps5_storage::scan([&](const ps5_storage::Progress& progress) {
+        assert(!progress.total || progress.completed <= progress.total);
+        if (progress.phase == ps5_storage::Phase::Copy && progress.completed == payload.size()) copied = true;
+        if (progress.phase == ps5_storage::Phase::Verify && progress.completed == payload.size()) verified = true;
+        if (progress.phase == ps5_storage::Phase::Search && progress.total > 0) searched = true;
+        return true;
+    });
+    assert(copied && verified && searched && found.size() == 1 && found[0].region == "PAL");
+    assert(get(ready.images / "game.iso") == payload);
+    assert(get(deferred.app / "game.iso") == payload);
+    copied = verified = false;
+    ps5_storage::scan([&](const ps5_storage::Progress& progress) {
+        copied |= progress.phase == ps5_storage::Phase::Copy;
+        verified |= progress.phase == ps5_storage::Phase::Verify;
+        return true;
+    });
+    assert(!copied && !verified); // verified import receipt avoids repeated GB reads
+    assert(get(ready.user / "config.json") == "retain menu language");
+    std::cout << "PAL/USA selection, interrupted copy, update survival, image collisions, save priority and symlinks, deferred scanning, progress, copy/verify cancellation and import cache: PASS\n";
 }

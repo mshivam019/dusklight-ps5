@@ -652,20 +652,20 @@ int game_main(int argc, char* argv[]) {
     dusk::ui::localization::initialize();
 #ifdef __PROSPERO__
     // Restore a protected selection rather than always forcing /app0/game.iso.
-    try {
-        if (!std::getenv("DUSK_PS5_STORAGE_ERROR")) {
-            if (const char* folder = std::getenv("DUSK_PS5_IMAGES")) {
-                const auto selected = ps5_storage::startup_disc(
-                    dusk::getSettings().backend.isoPath.getValue(), folder);
-                if (selected != dusk::getSettings().backend.isoPath.getValue()) {
-                    dusk::getSettings().backend.isoPath.setValue(selected);
-                    dusk::getSettings().backend.isoVerification.setValue(dusk::DiscVerificationState::Unknown);
-                    dusk::config::save();
-                }
-            }
+    // Restore only the already chosen path. Directory discovery and expensive
+    // ISO protection now run inside the visible picker, never before first paint.
+    {
+        const auto saved = dusk::getSettings().backend.isoPath.getValue();
+        const char* images = std::getenv("DUSK_PS5_IMAGES");
+        const std::filesystem::path path(saved);
+        bool protectedChoice = images && path.parent_path() == std::filesystem::path(images);
+        const bool externalChoice = path.parent_path() == "/mnt/usb0" || path.parent_path() == "/mnt/usb1";
+        std::error_code ec;
+        if (!saved.empty() && ((!protectedChoice && !externalChoice) ||
+            !std::filesystem::is_regular_file(path,ec))) {
+            dusk::getSettings().backend.isoPath.setValue("");
+            dusk::getSettings().backend.isoVerification.setValue(dusk::DiscVerificationState::Unknown);
         }
-    } catch (const std::exception& error) {
-        setenv("DUSK_PS5_STORAGE_ERROR", error.what(), 1);
     }
     if (std::getenv("DUSK_PS5_STORAGE_ERROR")) {
         dusk::getSettings().backend.isoPath.setValue("");

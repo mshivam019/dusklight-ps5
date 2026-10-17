@@ -581,3 +581,6 @@ body.animate-in .intro-item {
         justify-content: flex-start;
     }
 }
+
+/* Keep the existing menu artwork behind PS5 discovery and backup dialogs. */
+body.ps5-iso-background.disc-ready prelaunch-background { opacity: 1; }

@@ -1,3 +1,4 @@
+#include "ps5_disc_picker.hpp"
 #include "prelaunch.hpp"
 #include "localization.hpp"
 
@@ -803,38 +804,7 @@ void ensure_initialized() noexcept {
 void open_iso_picker() noexcept {
     ensure_initialized();
 #ifdef __PROSPERO__
-    // SDL dialogs are disabled on PS5. Use the existing controller-driven UI.
-    Modal::Props props{.title = "Select Disc Image"};
-    try {
-        if (const char* error = std::getenv("DUSK_PS5_STORAGE_ERROR"))
-            throw std::runtime_error(error);
-        const char* folder = std::getenv("DUSK_PS5_IMAGES");
-        if (!folder) throw std::runtime_error("Protected disc folder is unavailable");
-        const auto available = ps5_storage::discs(folder);
-        props.bodyText = available.empty() ?
-            localization::translate("Close Dusklight and copy your USA or European GameCube raw ISO to ") +
-                std::string(folder) + localization::translate(". Then reopen Dusklight and select it here. "
-                "Wii discs and compressed images are not supported by this PS5 backend.") :
-            "Choose a protected GameCube disc image. A changed disc takes effect after restarting Dusklight.";
-        for (const auto& disc : available) {
-            props.actions.push_back(ModalAction{
-                .label = disc.path.filename().string() + " (" + disc.region + ")",
-                .onPressed = [path = disc.path.string()](Modal& modal) {
-                    modal.pop();
-                    begin_disc_verification(path);
-                },
-            });
-        }
-    } catch (const std::exception& error) {
-        props.bodyText = error.what();
-        props.icon = "warning";
-    }
-    props.actions.push_back(ModalAction{
-        .label = "Cancel",
-        .onPressed = [](Modal& modal) { modal.pop(); },
-    });
-    props.isVertical = true;
-    if (auto* host = top_document()) host->push(std::make_unique<Modal>(std::move(props)));
+    open_ps5_disc_picker([](std::string path) { begin_disc_verification(std::move(path)); });
 #else
     borealis::file_select::open_file(
         {
@@ -900,6 +870,9 @@ void Prelaunch::refresh_menu_buttons() {
 
 Prelaunch::Prelaunch() : Document(kDocumentSource, false, DocumentScope::Prelaunch) {
     mRoot = mDocument->GetElementById("root");
+#ifdef __PROSPERO__
+    mDocument->SetClass("ps5-iso-background",true);
+#endif
     ensure_initialized();
     begin_update_check();
 

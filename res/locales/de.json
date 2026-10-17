@@ -267,5 +267,13 @@
   "Crash Reporting": "Absturzberichte",
   "Restart to Main Menu": "Zum Startmenü zurückkehren",
   "Restart Dusklight to the pre-launch menu to change settings, game modes, or mods.": "Kehrt zum Startmenü zurück, um Einstellungen, Spielmodi oder Mods zu ändern.",
-  "Missing Device": "Gerät fehlt"
+  "Missing Device": "Gerät fehlt",
+  "Searching disc images...": "ISO-Dateien werden gesucht …",
+  "Backing up ISO...": "ISO wird gesichert …",
+  "Verifying backup...": "Sicherung wird geprüft …",
+  "Preparing disc selection": "ISO-Auswahl wird vorbereitet",
+  "Your menu stays visible while files are checked. Original files are retained.": "Das Menü bleibt während der Prüfung sichtbar. Die Originaldateien bleiben erhalten.",
+  "Choose a GameCube disc image. A changed disc takes effect after restarting Dusklight.": "Wähle eine GameCube-ISO. Ein Wechsel wird nach einem Neustart von Dusklight wirksam.",
+  "Files checked": "Dateien geprüft",
+  "Scan canceled. Original files were retained.": "Suche abgebrochen. Die Originaldateien bleiben erhalten."
 }

@@ -35,6 +35,16 @@ for key in ['Play','Settings','Quit','Select Disc Image','Menu language',
             'No disc image found.','Disc ready.','Verifying disc image']:
     assert key in catalog, key
 
+for code in ('de','fr','es','it'):
+    translated = json.loads((ROOT/'res/locales'/(code+'.json')).read_text(encoding='utf-8'),object_pairs_hook=unique_pairs)
+    assert translated.keys() == catalog.keys(), 'Catalog coverage: '+code
+    for key,value in translated.items():
+        assert value.strip() and '<' not in value and '>' not in value,(code,key)
+        assert fields(key) == fields(value),(code,key)
+    for key in ('Searching disc images...','Backing up ISO...','Verifying backup...',
+                'Preparing disc selection','Menu language','Files checked'):
+        assert key in translated,(code,key)
+
 with tempfile.TemporaryDirectory(prefix='dusklight-ui-art-') as temporary:
     art = Path(temporary)
     shutil.copy2(ROOT/'ps5/art/make-glyphs.py', art/'make-glyphs.py')
@@ -65,4 +75,4 @@ with tempfile.TemporaryDirectory(prefix='dusklight-ui-art-') as temporary:
                 assert any(px[3] == 255 and px[:3] != (255,255,255) for px in a.getdata()),path.name
             if item['key'].endswith('_8'):
                 assert '_$_8.png' in path.name, 'Palette animation must not hide the PS5 prompt'
-print('German catalog and reproducible CC0 PS5 artwork: PASS')
+print('DE/FR/ES/IT catalog coverage/placeholders and reproducible CC0 PS5 artwork: PASS')
