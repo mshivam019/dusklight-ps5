@@ -1,3 +1,10 @@
+#ifdef __PROSPERO__
+#if __has_include("ps5_storage.h")
+#include "ps5_storage.h"
+#else
+#include "storage.h"
+#endif
+#endif
 /**
  * m_Do_MemCard.cpp
  * Memory Card Control
@@ -82,6 +89,11 @@ void mDoMemCd_Ctrl_c::ThdInit() {
         return;
     }
     CARDSetLoadType((CARDFileType)dusk::getSettings().backend.cardFileType.getValue());
+#ifdef __PROSPERO__
+    // Never fall back to empty internal saves when the selected USB drive is absent.
+    if (!ps5_storage::save_folder_ready()) return;
+    CARDSetBasePath(ps5_storage::save_folder().string().c_str(), -1);
+#endif
 #endif
 
 #if !PLATFORM_SHIELD

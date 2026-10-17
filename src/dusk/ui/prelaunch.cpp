@@ -792,11 +792,13 @@ void ensure_initialized() noexcept {
     state.initialLanguage = getSettings().game.language;
     state.initialGraphicsBackend = getSettings().backend.graphicsBackend;
     state.initialMenuLanguage = getSettings().backend.menuLanguage;
+    state.initialSaveDirectory = getSettings().backend.ps5SaveDirectory;
     state.initialCardFileType = getSettings().backend.cardFileType;
     state.errorString.clear();
     state.initialized = true;
 #ifdef __PROSPERO__
     if (const char* error = std::getenv("DUSK_PS5_STORAGE_ERROR")) state.errorString = error;
+    if (const char* error = std::getenv("DUSK_PS5_SAVE_ERROR")) state.errorString = error;
 #endif
     refresh_configured_disc_state();
 }
@@ -816,6 +818,9 @@ void open_iso_picker() noexcept {
 }
 
 bool is_restart_pending() noexcept {
+#ifdef __PROSPERO__
+    if (prelaunch_state().saveDirectoryRestartPending || getSettings().backend.ps5SaveDirectory.getValue() != prelaunch_state().initialSaveDirectory) return true;
+#endif
     if (getSettings().backend.menuLanguage.getValue() != prelaunch_state().initialMenuLanguage) {
         return true;
     }
@@ -921,6 +926,12 @@ void Prelaunch::build_menu_buttons() {
         gamemode::getGameModeManager().setGameModeToPrevious();
 
         auto playButton = std::make_unique<GameModeButton>(menuList, [this] {
+#ifdef __PROSPERO__
+            if (!ps5_storage::save_folder_ready()) {
+                prelaunch_state().errorString = localization::translate("Save folder unavailable. Connect its drive or choose another folder in Settings.");
+                return;
+            }
+#endif
             if (prelaunch_state().activeDiscPath.empty()) {
                 open_iso_picker();
                 return;

@@ -284,4 +284,148 @@ std::string startup_disc(const std::string& saved, const fs::path& directory) {
         if (disc.path == fs::path(saved)) return saved;
     return available.size() == 1 ? available.front().path.string() : std::string{};
 }
+
+namespace {
+fs::path active_saves;
+bool active_custom = false;
+void existing_directory(const fs::path& path) {
+    if (!path.is_absolute() || !fs::is_directory(path))
+        throw std::runtime_error("Save folder unavailable. Connect its drive or choose another folder in Settings.");
+    fs::path prefix;
+    for (const auto& part : path) {
+        prefix /= part;
+        if (fs::is_symlink(prefix)) throw std::runtime_error("Save folder contains a symbolic link.");
+    }
+}
+fs::path save_marker(const fs::path& folder) {
+    if (!prepared_paths) throw std::runtime_error("Protected data folder is unavailable.");
+    return folder / (".dusklight-saves-" + prepared_paths->root.filename().string());
+}
+void check_save_target(const fs::path& folder) {
+    existing_directory(folder);
+    if (requires_move(folder) || inside(folder,prepared_paths->root/"images") ||
+        folder==folder.root_path() || folder==fs::path("/data") || folder==fs::path("/mnt"))
+        throw std::runtime_error("Choose a save folder outside the application and ISO folders.");
+}
+bool marker_valid(const fs::path& folder) {
+    const auto path=save_marker(folder);
+    if (fs::is_symlink(path) || !fs::is_regular_file(path)) return false;
+    std::ifstream input(path); std::string line; std::getline(input,line);
+    return line=="Dusklight save folder v1";
+}
+void write_probe(const fs::path& folder) {
+    const auto path=folder/(".dusklight-write-test-"+std::to_string(
+        std::chrono::steady_clock::now().time_since_epoch().count()));
+    if (fs::exists(path) || fs::is_symlink(path)) throw std::runtime_error("Cannot check save folder write access.");
+    { std::ofstream out(path,std::ios::binary); out<<"write test"; out.close();
+      if (!out) { std::error_code ec; fs::remove(path,ec); throw std::runtime_error("Save folder is not writable."); } }
+    if (!fs::remove(path)) throw std::runtime_error("Cannot clean up save folder write test.");
+}
+bool save_artifact(const fs::path& path) {
+    const auto name=path.filename().string();
+    if (name=="USA" || name=="EUR" || name=="JAP" || name=="backups") return true;
+    for (const char* region:{"USA","EUR","JAP"}) for (char slot:{'A','B'}) {
+        const auto raw=std::string("MemoryCard")+slot+"."+region+".raw";
+        if (name==raw || name==raw+".mods") return true;
+    }
+    return false;
+}
+}
+
+bool is_internal_image(const fs::path& path) {
+    return prepared_paths && inside(path,prepared_paths->root/"images");
+}
+fs::path copy_selected(const fs::path& requested,const ProgressCallback& progress) {
+    const auto source=requested.lexically_normal();
+    if (!source.is_absolute() || fs::is_symlink(source) || !fs::is_regular_file(source))
+        throw std::runtime_error("Source data is not a regular file");
+    if (!prepared_paths) throw std::runtime_error("Protected disc folder is unavailable");
+    if (is_internal_image(source)) return source;
+    const auto candidates=discs(source.parent_path(),progress);
+    if (std::none_of(candidates.begin(),candidates.end(),[&](const Disc& disc) { return disc.path==source; }))
+        throw std::runtime_error("The selected game is not supported by Dusklight.");
+    const auto images=prepared_paths->root/"images";
+    directory(images);
+    auto target=images/source.filename();
+    unsigned number=1;
+    while (fs::exists(target) || fs::is_symlink(target)) {
+        if (fs::is_symlink(target)) throw std::runtime_error("Persistent image is a symbolic link");
+        if (fs::is_regular_file(target) && equal_files(source,target,progress)) return target;
+        target=images/(source.stem().string()+"-"+std::to_string(number++)+source.extension().string());
+    }
+    copy_verified(source,target,progress);
+    return target;
+}
+
+fs::path prepare_save_folder(const fs::path& requested,const fs::path& copy_from,const ProgressCallback& progress) {
+    const auto target=requested.lexically_normal();
+    check_save_target(target);
+    write_probe(target);
+    const auto marker=save_marker(target);
+    if ((fs::exists(marker) || fs::is_symlink(marker)) && !marker_valid(target))
+        throw std::runtime_error("Existing save folder marker is invalid. No files were replaced.");
+    std::vector<std::pair<fs::path,fs::path>> files;
+    if (!copy_from.empty() && target!=copy_from.lexically_normal()) {
+        existing_directory(copy_from);
+        if (inside(target,copy_from) || inside(copy_from,target))
+            throw std::runtime_error("Choose a separate save folder, not a parent or child of the current folder.");
+        auto add=[&](const fs::directory_entry& entry) {
+            report(progress,Phase::Search,entry.path(),files.size(),0);
+            if (entry.is_symlink()) throw std::runtime_error("Save data contains a symbolic link.");
+            if (!entry.is_regular_file() || image_name(entry.path()) || entry.path().extension()==".importing") return;
+            const auto destination=target/entry.path().lexically_relative(copy_from);
+            // Check all destination ancestors before reading or writing through them.
+            auto parent=destination.parent_path();
+            while (parent!=target) {
+                if (fs::is_symlink(parent) || (fs::exists(parent) && !fs::is_directory(parent)))
+                    throw std::runtime_error("Unsafe destination for save data.");
+                parent=parent.parent_path();
+            }
+            if (fs::is_symlink(destination) || (fs::exists(destination) && !equal_files(entry.path(),destination,progress)))
+                throw std::runtime_error("Different saves already exist in this folder. Nothing was overwritten. Choose another folder or use its existing saves.");
+            if (!fs::exists(destination)) files.emplace_back(entry.path(),destination);
+        };
+        for (const auto& entry:fs::directory_iterator(copy_from)) {
+            if (!save_artifact(entry.path())) continue;
+            if (entry.is_symlink()) throw std::runtime_error("Save data contains a symbolic link.");
+            if (entry.is_directory()) for (const auto& child:fs::recursive_directory_iterator(entry.path())) add(child);
+            else add(entry);
+        }
+        // Preflight conflicts first. Interrupted copies never change the active setting.
+        for (const auto& [source,destination]:files) copy_verified(source,destination,progress);
+    }
+    report(progress,Phase::Verify,target,1,1);
+    if (!fs::exists(marker)) {
+        std::ofstream out(marker); out<<"Dusklight save folder v1\n"; out.close();
+        if (!out) throw std::runtime_error("Cannot register this save folder.");
+    }
+    return target;
+}
+
+void activate_save_folder(const std::string& configured) {
+    active_saves.clear(); active_custom=!configured.empty();
+    if (!prepared_paths) throw std::runtime_error("Protected data folder is unavailable.");
+    const auto target=active_custom?fs::path(configured).lexically_normal():prepared_paths->root/"user";
+    check_save_target(target);
+    if (active_custom && !marker_valid(target))
+        throw std::runtime_error("Save folder unavailable. Connect its drive or choose it again in Settings.");
+    write_probe(target);
+    active_saves=target;
+}
+fs::path save_folder() { return active_saves; }
+bool save_folder_ready() noexcept {
+    try {
+        if (active_saves.empty()) return false;
+        existing_directory(active_saves);
+        return !active_custom || marker_valid(active_saves);
+    } catch (...) { return false; }
+}
+fs::path card_path(const std::string& game,bool raw,int channel) {
+    if (!save_folder_ready() || game.size()!=4 || channel<0 || channel>1)
+        throw std::runtime_error("Save folder unavailable. Connect its drive or choose another folder in Settings.");
+    const char* region=game[3]=='P'?"EUR":game[3]=='E'?"USA":game[3]=='J'?"JAP":nullptr;
+    if (!region) throw std::runtime_error("Unsupported save region.");
+    return raw?active_saves/(std::string("MemoryCard")+(channel?'B':'A')+"."+region+".raw"):
+        active_saves/region/(channel?"Card B":"Card A");
+}
 }

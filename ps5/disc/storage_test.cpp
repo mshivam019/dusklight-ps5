@@ -152,4 +152,69 @@ int main(int argc,char** argv) {
     put(root/"param.json","{\"titleId\":\"../bad-id\"}");
     rejects([&] { ps5_storage::title_id(root/"param.json"); });
     std::cout << "Fresh nested USB browsing, no automatic ISO copies/recreation, explicit moves, region selection, collisions, update survival, save precedence, symlinks, cross-filesystem progress and cancellation: PASS\n";
+    // Explicit internal copy keeps its external source, reuses equal copies,
+    // preserves name collisions, and never silently recreates a deleted image.
+    assert(ps5_storage::prepare(paths).error.empty());
+    put(usb/"explicit.iso",payload);
+    const auto copied_iso=ps5_storage::copy_selected(usb/"explicit.iso");
+    assert(get(copied_iso)==payload && get(usb/"explicit.iso")==payload);
+    assert(ps5_storage::copy_selected(usb/"explicit.iso")==copied_iso);
+    assert(ps5_storage::copy_selected(copied_iso)==copied_iso);
+    put(copied_iso,"different existing data");
+    const auto copy_collision=ps5_storage::copy_selected(usb/"explicit.iso");
+    assert(copy_collision!=copied_iso && get(copied_iso)=="different existing data");
+    for (auto phase:{ps5_storage::Phase::Copy,ps5_storage::Phase::Verify}) {
+        put(usb/"cancel-copy.iso",payload);
+        rejects([&] { ps5_storage::copy_selected(usb/"cancel-copy.iso",[&](const auto& value) {
+            return value.phase!=phase || value.completed==0;
+        }); });
+        assert(get(usb/"cancel-copy.iso")==payload && !fs::exists(ready.images/"cancel-copy.iso"));
+    }
+    // Save location applies to raw and GCI saves, all regions and both slots.
+    ps5_storage::activate_save_folder("");
+    assert(ps5_storage::save_folder()==ready.user && ps5_storage::save_folder_ready());
+    assert(ps5_storage::card_path("GZ2P",false,0)==ready.user/"EUR/Card A");
+    assert(ps5_storage::card_path("GZ2E",true,1)==ready.user/"MemoryCardB.USA.raw");
+    assert(ps5_storage::card_path("GZ2J",false,1)==ready.user/"JAP/Card B");
+    put(ready.user/"EUR/Card A/zelda.gci","PAL progress");
+    put(ready.user/"MemoryCardB.USA.raw","USA progress");
+    put(ready.user/"MemoryCardB.USA.raw.mods/data.bin","mods");
+    put(ready.user/"backups/old.dusksave","backup");
+    put(ready.user/"EUR/Card A/stray.iso",payload);
+    const auto saves=usb/"save-folder"; fs::create_directories(saves);
+    ps5_storage::prepare_save_folder(saves,ready.user);
+    assert(get(saves/"EUR/Card A/zelda.gci")=="PAL progress");
+    assert(get(saves/"MemoryCardB.USA.raw")=="USA progress");
+    assert(get(saves/"MemoryCardB.USA.raw.mods/data.bin")=="mods");
+    assert(get(saves/"backups/old.dusksave")=="backup");
+    assert(!fs::exists(saves/"config.json") && !fs::exists(saves/"EUR/Card A/stray.iso"));
+    assert(get(ready.user/"EUR/Card A/zelda.gci")=="PAL progress");
+    ps5_storage::activate_save_folder(saves.string());
+    assert(ps5_storage::card_path("GZ2P",false,0)==saves/"EUR/Card A");
+    put(saves/"EUR/Card A/zelda.gci","different progress");
+    put(ready.user/"EUR/Card B/new.gci","new save");
+    rejects([&] { ps5_storage::prepare_save_folder(saves,ready.user); });
+    assert(get(saves/"EUR/Card A/zelda.gci")=="different progress");
+    assert(!fs::exists(saves/"EUR/Card B/new.gci")); // preflight before writing
+    ps5_storage::prepare_save_folder(saves); // explicit use of existing saves
+    const auto cancel_saves=usb/"cancel-saves"; fs::create_directories(cancel_saves);
+    rejects([&] { ps5_storage::prepare_save_folder(cancel_saves,ready.user,[](const auto& value) {
+        return value.phase!=ps5_storage::Phase::Copy;
+    }); });
+    rejects([&] { ps5_storage::activate_save_folder(cancel_saves.string()); }); // not registered
+    assert(!ps5_storage::save_folder_ready());
+    rejects([&] { ps5_storage::card_path("GZ2P",false,0); }); // no fallback
+    ps5_storage::activate_save_folder(saves.string());
+    fs::rename(saves,usb/"unplugged-saves"); fs::create_directories(saves);
+    assert(!ps5_storage::save_folder_ready()); // empty replacement mount rejected
+    rejects([&] { ps5_storage::activate_save_folder(saves.string()); });
+    assert(!ps5_storage::save_folder_ready());
+    rejects([&] { ps5_storage::prepare_save_folder(paths.app); });
+    rejects([&] { ps5_storage::prepare_save_folder(ready.images); });
+    const auto linked=usb/"linked-saves"; fs::create_directory_symlink(ready.user,linked);
+    rejects([&] { ps5_storage::prepare_save_folder(linked); });
+    ps5_storage::activate_save_folder("");
+    assert(get(ready.user/"EUR/Card A/zelda.gci")=="PAL progress");
+    std::cout << "Explicit SSD copy, save folder activation, missing drives, raw/GCI paths, conflict preflight and cancellation: PASS\n";
+
 }

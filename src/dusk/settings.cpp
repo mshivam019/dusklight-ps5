@@ -179,6 +179,7 @@ UserSettings g_userSettings = {
         .isoVerification {"backend.isoVerification", DiscVerificationState::Unknown},
         .graphicsBackend {"backend.graphicsBackend", "auto"},
         .menuLanguage {"backend.menuLanguage", ""},
+        .ps5SaveDirectory {"backend.ps5SaveDirectory", ""},
         .skipPreLaunchUI {"backend.skipPreLaunchUI", false},
         .showPipelineCompilation {"backend.showPipelineCompilation", true},
         .wasPresetChosen {"backend.wasPresetChosen", false},
@@ -400,6 +401,7 @@ void registerSettings() {
     Register(g_userSettings.backend.isoVerification);
     Register(g_userSettings.backend.graphicsBackend);
     Register(g_userSettings.backend.menuLanguage);
+    Register(g_userSettings.backend.ps5SaveDirectory);
     Register(g_userSettings.backend.skipPreLaunchUI);
     Register(g_userSettings.backend.showPipelineCompilation);
     Register(g_userSettings.backend.wasPresetChosen);

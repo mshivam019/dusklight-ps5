@@ -32,11 +32,12 @@ struct Row {
 
 class FileBrowser final : public WindowSmall {
 public:
-    explicit FileBrowser(Selected selected) : WindowSmall("modal"), mSelected(std::move(selected)) {
+    explicit FileBrowser(Selected selected, bool saves=false, bool canCopy=true)
+        : WindowSmall("modal"), mSelected(std::move(selected)), mSaves(saves), mCanCopy(canCopy) {
         mRoot->SetProperty("width","80vw");
         mRoot->SetProperty("max-width","1000dp");
         auto* header = append(mDialog,"modal-header");
-        append_text(append(header,"modal-title"),"Select Disc Image");
+        append_text(append(header,"modal-title"),mSaves?"Save folder":"Select Disc Image");
         auto* body = append(mDialog,"modal-body");
         mHelp = append(body,"div");
         mPath = append(body,"file-path");
@@ -51,10 +52,21 @@ public:
         mList->root()->SetProperty("height","34vh");
         mList->root()->SetProperty("flex","0 0 auto");
         auto* actions = append(mDialog,"modal-actions");
+        actions->SetProperty("flex-wrap","wrap");
         mPlacesButton = button(actions,"Locations",[this] { if (!mBusy) locations(); });
         mUpButton = button(actions,"Back",[this] { if (!mBusy) back(); });
         mMoveButton = button(actions,"Move and use ISO",[this] {
             if (!mBusy && !mAwaitMove.empty()) begin(Mode::Move,mAwaitMove);
+        });
+        mCopyButton = button(actions,"Copy to internal SSD and use",[this] {
+            if (!mBusy && !mAwaitMove.empty()) begin(Mode::Copy,mAwaitMove);
+        });
+        mDirectButton = button(actions,"Use directly",[this] {
+            if (!mBusy && !mAwaitMove.empty()) { const auto path=mAwaitMove.string(); auto selected=mSelected; close(); selected(path); }
+        });
+        mUseFolderButton = button(actions,"Use this folder",[this] { if (!mBusy && !mFolder.empty()) begin(Mode::SaveExisting,mFolder); });
+        mCopySavesButton = button(actions,"Copy current saves and use",[this] {
+            if (!mBusy && mCanCopy && !mFolder.empty()) begin(Mode::SaveCopy,mFolder);
         });
         mCancelButton = button(actions,"Cancel",[this] { cancel(); });
         locations(); // no directory scan, import, or ISO copy on opening
@@ -83,7 +95,10 @@ public:
                             std::lock_guard guard(mMutex); mProgress=value; return true;
                         };
                         if (mode==Mode::Browse) mResultRows=ps5_storage::browse(path,progress);
-                        else mResultPath=ps5_storage::move_selected(path,progress);
+                        else if (mode==Mode::Move) mResultPath=ps5_storage::move_selected(path,progress);
+                        else if (mode==Mode::Copy) mResultPath=ps5_storage::copy_selected(path,progress);
+                        else mResultPath=ps5_storage::prepare_save_folder(path,
+                            mode==Mode::SaveCopy?ps5_storage::save_folder():fs::path{},progress);
                     } catch (const std::exception& error) { mError=error.what(); }
                       catch (...) { mError="Unable to read the selected file."; }
                     mDone.store(true,std::memory_order_release);
@@ -97,19 +112,19 @@ public:
             if (mWorker.joinable()) mWorker.join();
             mBusy=false;
             if (mCancel.load(std::memory_order_relaxed)) { close(); return; }
-            if (mError.empty() && mMode==Mode::Move) {
+            if (mError.empty() && mMode!=Mode::Browse) {
                 auto selected=mSelected;
                 const auto path=mResultPath.string();
                 close(); selected(path); return;
             }
             if (mMode==Mode::Browse && mError.empty()) {
                 mRows.clear();
-                for (const auto& entry:mResultRows) mRows.push_back({entry.path,entry.directory,
+                for (const auto& entry:mResultRows) if (!mSaves || entry.directory) mRows.push_back({entry.path,entry.directory,
                     entry.path.filename().string()+(entry.directory?"/":"")});
                 show_rows();
             } else {
                 show_rows();
-                set_text_content(mStage,mMode==Mode::Browse?"Cannot open this folder.":"Could not move this ISO.");
+                set_text_content(mStage,mMode==Mode::Browse?"Cannot open this folder.":"Operation failed. Original files were retained.");
                 set_text_content(mDetail,mError);
             }
             focus();
@@ -118,8 +133,8 @@ public:
         if (mCancel.load(std::memory_order_relaxed)) return;
         ps5_storage::Progress state;
         { std::lock_guard guard(mMutex); state=mProgress; }
-        const char* label=state.phase==ps5_storage::Phase::Copy?"Moving selected ISO...":
-            state.phase==ps5_storage::Phase::Verify?"Verifying moved ISO...":"Reading folder...";
+        const char* label=state.phase==ps5_storage::Phase::Copy?(mSaves?"Copying saves...":"Copying ISO..."):
+            state.phase==ps5_storage::Phase::Verify?"Verifying files...":"Reading folder...";
         set_text_content(mStage,label);
         if (state.total) {
             const auto fraction=std::clamp(float(state.completed)/float(state.total),0.f,1.f);
@@ -138,7 +153,7 @@ public:
     }
     bool focus() override {
         if (mBusy) return mCancelButton->focus();
-        if (!mAwaitMove.empty()) return mMoveButton->focus();
+        if (!mAwaitMove.empty()) return mManaged?mMoveButton->focus():mCopyButton->focus();
         return mList->focus() || mUpButton->focus() || mCancelButton->focus();
     }
 protected:
@@ -152,7 +167,11 @@ protected:
         std::vector<Button*> buttons;
         if (mAwaitMove.empty()) buttons.push_back(mPlacesButton.get());
         buttons.push_back(mUpButton.get());
-        if (!mAwaitMove.empty()) buttons.push_back(mMoveButton.get());
+        if (!mAwaitMove.empty()) {
+            if (mManaged) buttons.push_back(mMoveButton.get());
+            else { buttons.push_back(mCopyButton.get()); buttons.push_back(mDirectButton.get()); }
+        }
+        if (mSaves && !mFolder.empty()) { buttons.push_back(mUseFolderButton.get()); buttons.push_back(mCopySavesButton.get()); }
         buttons.push_back(mCancelButton.get());
         const auto target=event.GetTargetElement();
         auto current=std::find_if(buttons.begin(),buttons.end(),[target](Button* b) { return b->contains(target); });
@@ -168,7 +187,7 @@ protected:
         return handled;
     }
 private:
-    enum class Mode { Browse,Move };
+    enum class Mode { Browse,Move,Copy,SaveExisting,SaveCopy };
     std::unique_ptr<Button> button(Rml::Element* parent,const char* text,ButtonCallback pressed) {
         auto result=std::make_unique<Button>(parent,text);
         result->root()->SetClass("modal-btn",true);
@@ -183,7 +202,15 @@ private:
         mPlacesButton->root()->SetProperty("display","block");
         mPlacesButton->set_disabled(false);
         mUpButton->set_disabled(mFolder.empty());
-        set_text_content(mHelp,"Open a folder and choose your ISO.");
+        mCopyButton->root()->SetProperty("display","none");
+        mDirectButton->root()->SetProperty("display","none");
+        mUseFolderButton->root()->SetProperty("display",mSaves && !mFolder.empty()?"block":"none");
+        mCopySavesButton->root()->SetProperty("display",mSaves && !mFolder.empty()?"block":"none");
+        mCopySavesButton->set_disabled(!mCanCopy || !ps5_storage::save_folder_ready());
+        set_text_content(mHelp,mSaves?
+            (mCanCopy?"Choose a folder for saves. Use its existing saves or copy your current saves there. Changes require a restart.":
+             "Choose a folder for saves. Restart the app before copying saves from a running game."):
+            "Open a folder and choose your ISO.");
         set_text_content(mPath,mFolder.empty()?localization::translate("Locations"):mFolder.string());
     }
     void show_rows() {
@@ -200,9 +227,9 @@ private:
         auto add=[this](const char* label,const fs::path& path) {
             if (!path.empty()) mRows.push_back({path,true,localization::translate(label)+"  ("+path.string()+")"});
         };
-        const auto last=fs::path(getSettings().backend.isoPath.getValue()).parent_path();
+        const auto last=mSaves?ps5_storage::save_folder():fs::path(getSettings().backend.isoPath.getValue()).parent_path();
         if (!last.empty()) add("Last used folder",last);
-        if (const char* images=std::getenv("DUSK_PS5_IMAGES")) add("Protected ISOs",images);
+        if (!mSaves) if (const char* images=std::getenv("DUSK_PS5_IMAGES")) add("Protected ISOs",images);
         add("USB 0","/mnt/usb0"); add("USB 1","/mnt/usb1");
         add("Data storage","/data");
         const char* app=std::getenv("DUSK_PS5_APP_ROOT");
@@ -221,15 +248,18 @@ private:
         const auto row=mRows[key];
         if (row.directory) { begin(Mode::Browse,row.path); return; }
         try {
-            if (ps5_storage::requires_move(row.path)) {
+            if (!ps5_storage::is_internal_image(row.path)) {
+                mManaged=ps5_storage::requires_move(row.path);
                 mAwaitMove=row.path;
                 mList->root()->SetProperty("display","none");
                 mPlacesButton->root()->SetProperty("display","none");
-                mMoveButton->root()->SetProperty("display","block");
+                mMoveButton->root()->SetProperty("display",mManaged?"block":"none");
+                mCopyButton->root()->SetProperty("display",mManaged?"none":"block");
+                mDirectButton->root()->SetProperty("display",mManaged?"none":"block");
                 mUpButton->set_disabled(false);
-                set_text_content(mHelp,"This ISO is inside the app folder. Move it outside before using it so a store update cannot remove it. No permanent second copy is needed.");
+                set_text_content(mHelp,mManaged?"This ISO is inside the app folder. Move it outside before using it so a store update cannot remove it. No permanent second copy is needed.":"Copy this ISO to protected internal storage, or use it directly. Copying keeps the original on its drive.");
                 set_text_content(mPath,row.path.string());
-                mMoveButton->focus(); return;
+                focus(); return;
             }
             auto selected=mSelected;
             close(); selected(row.path.string()); // no copy for USB or external folders
@@ -247,9 +277,13 @@ private:
         mList->root()->SetProperty("display","none");
         mBar->SetProperty("display","block"); mBar->SetAttribute("value",0.f);
         mMoveButton->root()->SetProperty("display","none");
+        mCopyButton->root()->SetProperty("display","none");
+        mDirectButton->root()->SetProperty("display","none");
+        mUseFolderButton->root()->SetProperty("display","none");
+        mCopySavesButton->root()->SetProperty("display","none");
         mPlacesButton->set_disabled(true); mUpButton->set_disabled(true);
         set_text_content(mPath,path.string());
-        set_text_content(mStage,mode==Mode::Browse?"Reading folder...":"Moving selected ISO...");
+        set_text_content(mStage,mode==Mode::Browse?"Reading folder...":mSaves?"Copying saves...":"Copying ISO...");
         set_text_content(mDetail,"");
         mCancelButton->focus();
     }
@@ -263,6 +297,7 @@ private:
         mFinished=true; browser_open=false; pop();
     }
     Selected mSelected;
+    bool mSaves=false,mCanCopy=true,mManaged=false;
     std::thread mWorker;
     std::mutex mMutex;
     ps5_storage::Progress mProgress;
@@ -276,7 +311,7 @@ private:
     unsigned mFrames=0,mPulse=0;
     Rml::Element *mHelp=nullptr,*mPath=nullptr,*mStage=nullptr,*mBar=nullptr,*mDetail=nullptr;
     std::unique_ptr<List> mList;
-    std::unique_ptr<Button> mPlacesButton,mUpButton,mMoveButton,mCancelButton;
+    std::unique_ptr<Button> mPlacesButton,mUpButton,mMoveButton,mCopyButton,mDirectButton,mUseFolderButton,mCopySavesButton,mCancelButton;
 };
 }
 
@@ -287,5 +322,13 @@ void open_ps5_disc_picker(Selected selected) {
         browser_open=true; host->push(std::move(window));
     }
 }
+void open_ps5_save_folder_picker(Selected selected,bool canCopy) {
+    if (browser_open) return;
+    if (auto* host=top_document()) {
+        auto window=std::make_unique<FileBrowser>(std::move(selected),true,canCopy);
+        browser_open=true; host->push(std::move(window));
+    }
+}
+
 }
 #endif

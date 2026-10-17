@@ -49,4 +49,16 @@ std::filesystem::path move_selected(const std::filesystem::path& source,
 std::vector<Disc> discs(const std::filesystem::path& directory, const ProgressCallback& progress = {});
 // Retain an available protected selection; auto-select only an unambiguous disc.
 std::string startup_disc(const std::string& saved, const std::filesystem::path& directory);
+
+// Explicit user requests only: external originals are never removed by copying.
+bool is_internal_image(const std::filesystem::path& path);
+std::filesystem::path copy_selected(const std::filesystem::path& source, const ProgressCallback& progress = {});
+// Capture the configured save root at startup. Failed activation never falls back.
+void activate_save_folder(const std::string& configured);
+std::filesystem::path save_folder();
+bool save_folder_ready() noexcept;
+std::filesystem::path card_path(const std::string& game, bool raw, int channel);
+// Select an existing directory; optional copy keeps all source saves and refuses conflicts.
+std::filesystem::path prepare_save_folder(const std::filesystem::path& target,
+    const std::filesystem::path& copy_from = {}, const ProgressCallback& progress = {});
 }

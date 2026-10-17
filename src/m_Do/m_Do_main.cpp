@@ -651,6 +651,14 @@ int game_main(int argc, char* argv[]) {
     ApplyCVarOverrides(parsed_arg_options["cvar"]);
     dusk::ui::localization::initialize();
 #ifdef __PROSPERO__
+    try {
+        ps5_storage::activate_save_folder(dusk::getSettings().backend.ps5SaveDirectory.getValue());
+    } catch (const std::exception& error) {
+        setenv("DUSK_PS5_SAVE_ERROR",error.what(),1);
+        dusk::getSettings().backend.skipPreLaunchUI.setValue(false);
+    }
+#endif
+#ifdef __PROSPERO__
     // Restore only the already chosen path. Directory discovery and expensive
     // ISO moves run only after an explicit request in the visible browser.
     {
