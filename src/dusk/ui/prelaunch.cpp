@@ -1,4 +1,5 @@
 #include "prelaunch.hpp"
+#include "ps5_iso_picker.hpp"
 
 #include "dusk/app_info.hpp"
 #include "dusk/config.hpp"
@@ -792,12 +793,16 @@ void ensure_initialized() noexcept {
 
 void open_iso_picker() noexcept {
     ensure_initialized();
+#ifdef __PROSPERO__
+    open_ps5_iso_picker([](std::string path) { begin_disc_verification(std::move(path)); });
+#else
     borealis::file_select::open_file(
         {
             .parentWindow = aurora::window::get_sdl_window(),
             .filters = kDiscFileFilters,
         },
         &file_dialog_callback);
+#endif
 }
 
 bool is_restart_pending() noexcept {

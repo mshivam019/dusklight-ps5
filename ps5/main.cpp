@@ -24,5 +24,7 @@ int main() {
     char log[] = "--log-dir=/app0/user/logs";
     char disc[] = "/app0/game.iso";
     char* args[] = {app, user, log, disc, nullptr};
-    return aurora_main(4, args);
+    // Restore the saved ISO instead of forcing the legacy disc argument.
+    args[3] = nullptr;
+    return aurora_main(3, args);
 }

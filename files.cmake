@@ -1607,6 +1607,7 @@ set(DUSK_FILES
         src/dusk/ui/logs_window.hpp
         src/dusk/ui/list.cpp
         src/dusk/ui/list.hpp
+        src/dusk/ui/ps5_iso_picker.cpp
         src/dusk/ui/menu_bar.cpp
         src/dusk/ui/menu_bar.hpp
         src/dusk/ui/mod_browser.cpp

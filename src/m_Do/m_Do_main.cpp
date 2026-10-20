@@ -863,6 +863,7 @@ int game_main(int argc, char* argv[]) {
         if (forcePreLaunchUI && skipPreLaunchUI) {
             DuskLog.warn("Prelaunch UI was disabled with no usable DVD image, enabling prelaunch UI");
             dusk::getSettings().backend.skipPreLaunchUI.setValue(false);
+            skipPreLaunchUI = false;
             saveConfigBeforePrelaunch = true;
         }
         if (saveConfigBeforePrelaunch) {
