@@ -59,6 +59,8 @@ struct PrelaunchState {
     bool pendingLanguageUnavailableNotice = false;
     std::string initialGraphicsBackend;
     int initialCardFileType = 0;
+    std::string initialSaveDirectory;
+    bool saveDirectoryRestartPending = false;
     std::string errorString;
     std::string pendingDiscPath;
     iso::DiscInfo pendingDiscInfo{};

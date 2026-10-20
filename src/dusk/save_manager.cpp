@@ -1,3 +1,10 @@
+#ifdef __PROSPERO__
+#if __has_include("ps5_storage.h")
+#include "ps5_storage.h"
+#else
+#include "storage.h"
+#endif
+#endif
 #include "save_manager.hpp"
 
 #include "aurora/card.h"
@@ -793,6 +800,12 @@ ValueResult<Storage> resolve_storage(
                                                                  StorageKind::RawImage;
         storage.mounted = true;
     }
+#ifdef __PROSPERO__
+    try {
+        storage.path = ps5_storage::card_path(std::string(game),storage.kind == StorageKind::RawImage,channel);
+    } catch (const std::exception& error) { return {failure(error.what()), {}}; }
+    return {success(), std::move(storage)};
+#else
     const std::string gameName{game};
     const auto cardType = storage.kind == StorageKind::GciDirectory ? AURORA_CARD_GCI_DIRECTORY :
                                                                       AURORA_CARD_RAW_IMAGE;
@@ -808,6 +821,7 @@ ValueResult<Storage> resolve_storage(
     }
     storage.path = borealis::io::fs_path_from_utf8(path.data());
     return {success(), std::move(storage)};
+#endif
 }
 
 ValueResult<std::vector<SaveIdentity>> list_saves(

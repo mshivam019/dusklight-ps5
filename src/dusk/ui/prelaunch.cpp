@@ -9,6 +9,15 @@
 #include "dusk/main.h"
 #include "dusk/mod_loader.hpp"
 #include "dusk/settings.h"
+#include "ps5_storage_ui.hpp"
+#ifdef __PROSPERO__
+#if __has_include("ps5_storage.h")
+#include "ps5_storage.h"
+#else
+#include "storage.h"
+#endif
+#endif
+
 #include "dusk/ui/format.hpp"
 #include "dusk/ui/menu_bar.hpp"
 #include "mod_updates.hpp"
@@ -168,7 +177,7 @@ DiscVerificationState verification_to_config(iso::ValidationError validation) {
     }
 }
 
-void begin_disc_verification(std::string path) noexcept {
+void begin_disc_verification_now(std::string path) noexcept {
     if (path.empty()) {
         return;
     }
@@ -178,6 +187,16 @@ void begin_disc_verification(std::string path) noexcept {
     }
     sDiscVerificationTask = std::make_unique<DiscVerificationTask>(std::move(path));
     sDiscVerificationModalPushed = false;
+}
+
+void begin_disc_verification(std::string path) noexcept {
+#ifdef __PROSPERO__
+    if (!path.empty() && !ps5_storage::is_internal_image(path)) {
+        open_ps5_disc_storage(std::move(path),[](std::string selected) { begin_disc_verification_now(std::move(selected)); });
+        return;
+    }
+#endif
+    begin_disc_verification_now(std::move(path));
 }
 
 std::optional<DiscVerificationResult> take_finished_disc_verification() {
@@ -785,8 +804,13 @@ void ensure_initialized() noexcept {
     state.initialLanguage = getSettings().game.language;
     state.initialGraphicsBackend = getSettings().backend.graphicsBackend;
     state.initialCardFileType = getSettings().backend.cardFileType;
+    state.initialSaveDirectory = getSettings().backend.ps5SaveDirectory;
     state.errorString.clear();
     state.initialized = true;
+#ifdef __PROSPERO__
+    if (const char* error=std::getenv("DUSK_PS5_STORAGE_ERROR")) state.errorString=error;
+    if (const char* error=std::getenv("DUSK_PS5_SAVE_ERROR")) state.errorString=error;
+#endif
     refresh_configured_disc_state();
 }
 
@@ -814,6 +838,9 @@ bool is_restart_pending() noexcept {
     if (getSettings().game.language.getValue() != state.initialLanguage) {
         return true;
     }
+#ifdef __PROSPERO__
+    if (prelaunch_state().saveDirectoryRestartPending || getSettings().backend.ps5SaveDirectory.getValue()!=prelaunch_state().initialSaveDirectory) return true;
+#endif
     if (g_mDoMemCd_control.mInitialized &&
         getSettings().backend.cardFileType.getValue() != state.initialCardFileType)
     {
@@ -900,6 +927,12 @@ void Prelaunch::build_menu_buttons() {
         gamemode::getGameModeManager().setGameModeToPrevious();
 
         auto playButton = std::make_unique<GameModeButton>(menuList, [this] {
+#ifdef __PROSPERO__
+            if (!ps5_storage::save_folder_ready()) {
+                prelaunch_state().errorString="Save folder unavailable. Connect its drive or choose another folder in Settings.";
+                return;
+            }
+#endif
             if (prelaunch_state().activeDiscPath.empty()) {
                 open_iso_picker();
                 return;

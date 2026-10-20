@@ -345,6 +345,7 @@ struct UserSettings {
         ConfigVar<bool> checkForUpdates;
         ConfigVar<bool> checkForModUpdates;
         ConfigVar<int> cardFileType;
+        ConfigVar<std::string> ps5SaveDirectory;
         ConfigVar<bool> enableAdvancedSettings;
     } backend;
 

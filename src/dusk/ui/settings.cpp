@@ -16,6 +16,16 @@
 #include "dusk/audio/DuskAudioSystem.h"
 #include "dusk/audio/DuskDsp.hpp"
 #include "dusk/config.hpp"
+#include "ps5_storage_ui.hpp"
+#include "m_Do/m_Do_MemCard.h"
+#ifdef __PROSPERO__
+#if __has_include("ps5_storage.h")
+#include "ps5_storage.h"
+#else
+#include "storage.h"
+#endif
+#endif
+
 #include "dusk/data.hpp"
 #include "dusk/discord_presence.hpp"
 #include "dusk/hotkeys.h"
@@ -641,6 +651,32 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
                     }
                     pane.add_rml("<br/>Changes require a restart.");
                 });
+#ifdef __PROSPERO__
+            leftPane.register_control(
+                leftPane.add_select_button({
+                    .key = "Save folder",
+                    .getValue = [] {
+                        const auto& path = getSettings().backend.ps5SaveDirectory.getValue();
+                        return path.empty()?std::string("Protected internal folder"):path;
+                    },
+                    .isModified = [] { return getSettings().backend.ps5SaveDirectory.getValue() != prelaunch_state().initialSaveDirectory; },
+                }), rightPane, [](Pane& pane) {
+                    pane.add_text("Save location only. Settings and textures stay in internal storage.");
+                    pane.add_button("Choose save folder").on_pressed([] {
+                        open_ps5_save_folder_picker([](std::string path) {
+                            getSettings().backend.ps5SaveDirectory.setValue(std::move(path));
+                            prelaunch_state().saveDirectoryRestartPending = true;
+                            config::save();
+                        },!g_mDoMemCd_control.mInitialized);
+                    });
+                    pane.add_button("Use default save folder").on_pressed([] {
+                        getSettings().backend.ps5SaveDirectory.setValue("");
+                        prelaunch_state().saveDirectoryRestartPending = true;
+                        config::save();
+                    });
+                    pane.add_text("Changes require a restart. Existing saves are never overwritten. Returning to the default folder uses its existing saves.");
+                });
+#endif
             leftPane.register_control(
                 leftPane.add_select_button({
                     .key = "Save File Type",

@@ -1559,6 +1559,7 @@ set(DUSK_FILES
         src/dusk/presentation.hpp
         src/dusk/scope_guard.hpp
         src/dusk/save_manager.cpp
+        src/dusk/ui/ps5_storage_ui.cpp
         src/dusk/save_manager.hpp
         src/dusk/settings.cpp
         src/dusk/speedrun.cpp

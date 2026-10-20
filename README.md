@@ -1,3 +1,10 @@
+> Personal-data storage changes in this proposal: saves/settings move to
+> `/data/dusklight/<TITLEID>/user/`, protected ISOs to sibling `images/`.
+> See [storage and upgrade instructions](ps5/STORAGE-CHANGES.md) before upgrading.
+> Existing data migration is once-only; ISOs are moved/copied only on explicit
+> request. Preserve personal files before the first upgrade. The original-release
+> install paths and observations below are historical where they differ.
+
 # Dusklight for PS5
 
 **Installed from ProsperoStore?** [Use the game-specific setup](INSTALL.md#already-installed-from-prosperostore): choose your game files and an output location; it prepares and checks a ready-to-copy folder automatically. Download **PS5-Install-Helper-v1.2.0.zip** from this game's release. Python 3.9+ is required; game conversion/module preparation requirements are listed in the guide.

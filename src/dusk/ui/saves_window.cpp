@@ -102,7 +102,8 @@ std::string mode_label(std::string_view saveName) {
 
 save_manager::ValueResult<Context> context_for_save(const std::string& saveName) {
     const auto& state = prelaunch_state();
-    if (data::is_data_path_restart_pending() ||
+    if (state.saveDirectoryRestartPending || getSettings().backend.ps5SaveDirectory.getValue()!=state.initialSaveDirectory ||
+        data::is_data_path_restart_pending() ||
         (!state.activeDiscPath.empty() && state.configuredDiscPath != state.activeDiscPath))
     {
         return {{.message = "Restart required before managing saves."}, {}};

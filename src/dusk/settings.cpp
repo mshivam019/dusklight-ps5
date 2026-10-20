@@ -184,6 +184,7 @@ UserSettings g_userSettings = {
         .checkForUpdates {"backend.checkForUpdates", true},
         .checkForModUpdates {"backend.checkForModUpdates", true},
         .cardFileType {"backend.cardFileType", static_cast<int>(CARD_GCIFOLDER)},
+        .ps5SaveDirectory {"backend.ps5SaveDirectory", ""},
         .enableAdvancedSettings {"backend.enableAdvancedSettings", false},
     },
 
@@ -404,6 +405,7 @@ void registerSettings() {
     Register(g_userSettings.backend.checkForUpdates);
     Register(g_userSettings.backend.checkForModUpdates);
     Register(g_userSettings.backend.cardFileType);
+    Register(g_userSettings.backend.ps5SaveDirectory);
     Register(g_userSettings.backend.enableAdvancedSettings);
 
     Register(g_userSettings.actionBindings.firstPersonCamera[0]);

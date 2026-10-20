@@ -1,3 +1,13 @@
+#ifdef __PROSPERO__
+#if __has_include("ps5_storage.h")
+#include "ps5_storage.h"
+#else
+#include "storage.h"
+#endif
+#endif
+#include <exception>
+#include <cstdlib>
+#include <stdexcept>
 /**
  * m_Do_main.cpp
  * Main Initialization
@@ -627,6 +637,19 @@ int game_main(int argc, char* argv[]) {
 
     dusk::registerSettings();
 
+#ifdef __PROSPERO__
+    try {
+        const auto title=ps5_storage::title_id("/app0/sce_sys/param.json");
+        const auto root=std::filesystem::path("/data/dusklight")/title;
+        const auto data=ps5_storage::prepare({"/app0",root,std::filesystem::path("/data/prosperostore/previous")/title,"/download0"});
+        if (!data.error.empty()) throw std::runtime_error(data.error);
+        standardOptions.userDir=data.user;
+        setenv("DUSK_PS5_IMAGES",data.images.c_str(),1);
+    } catch (const std::exception& error) {
+        setenv("DUSK_PS5_STORAGE_ERROR",error.what(),1);
+        standardOptions.userDir=std::filesystem::path("/download0/dusklight-storage-error");
+    }
+#endif
     const auto dataPaths = dusk::data::initialize_data(standardOptions.userDir);
     dusk::ConfigPath = dataPaths.userPath;
     dusk::CachePath = dataPaths.cachePath;
@@ -643,6 +666,34 @@ int game_main(int argc, char* argv[]) {
 
     dusk::config::load_from_user_preferences();
     ApplyCVarOverrides(parsed_arg_options["cvar"]);
+#ifdef __PROSPERO__
+    try {
+        ps5_storage::activate_save_folder(dusk::getSettings().backend.ps5SaveDirectory.getValue());
+    } catch (const std::exception& error) {
+        setenv("DUSK_PS5_SAVE_ERROR",error.what(),1);
+        dusk::getSettings().backend.skipPreLaunchUI.setValue(false);
+    }
+#endif
+#ifdef __PROSPERO__
+    // Restore only the already chosen path. Directory discovery and expensive
+    // ISO moves run only after an explicit request in the visible browser.
+    {
+        const auto saved = dusk::getSettings().backend.isoPath.getValue();
+        const std::filesystem::path path(saved);
+        std::error_code ec;
+        const bool managed = !saved.empty() && !std::getenv("DUSK_PS5_STORAGE_ERROR") &&
+                             ps5_storage::requires_move(path);
+        if (!saved.empty() && (managed || !std::filesystem::is_regular_file(path,ec))) {
+            dusk::getSettings().backend.isoPath.setValue("");
+            dusk::getSettings().backend.isoVerification.setValue(dusk::DiscVerificationState::Unknown);
+        }
+    }
+    if (std::getenv("DUSK_PS5_STORAGE_ERROR")) {
+        dusk::getSettings().backend.isoPath.setValue("");
+        dusk::getSettings().backend.skipPreLaunchUI.setValue(false);
+    }
+#endif
+
     borealis::sentry::Options sentryOptions{
         .release = fmt::format("{}@{}", dusk::AppInfo.appName, BOREALIS_APP_DESCRIBE),
         .databaseDirectory = dusk::CachePath / "sentry",
@@ -801,7 +852,12 @@ int game_main(int argc, char* argv[]) {
     std::string dvdLocation = dusk::getSettings().backend.isoPath;
     std::string dvdPath = resolveDvdLocation(dvdLocation);
     bool dvd_opened = false;
-    if (parsed_arg_options.count("dvd")) {
+    // The protected selection replaces the legacy launcher-supplied app ISO.
+    if (parsed_arg_options.count("dvd")
+#ifdef __PROSPERO__
+        && !std::getenv("DUSK_PS5_IMAGES") && !std::getenv("DUSK_PS5_STORAGE_ERROR")
+#endif
+    ) {
         dvdLocation = parsed_arg_options["dvd"].as<std::string>();
         dvdPath = resolveDvdLocation(dvdLocation);
         if (dusk::iso::inspect(dvdLocation.c_str(), discInfo) ==
@@ -865,6 +921,7 @@ int game_main(int argc, char* argv[]) {
             dusk::getSettings().backend.skipPreLaunchUI.setValue(false);
             saveConfigBeforePrelaunch = true;
         }
+        if (forcePreLaunchUI) skipPreLaunchUI=false;
         if (saveConfigBeforePrelaunch) {
             dusk::config::save();
         }
