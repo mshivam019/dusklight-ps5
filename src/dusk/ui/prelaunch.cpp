@@ -784,6 +784,7 @@ void ensure_initialized() noexcept {
         verification_from_config(getSettings().backend.isoVerification.getValue());
     state.initialLanguage = getSettings().game.language;
     state.initialGraphicsBackend = getSettings().backend.graphicsBackend;
+    state.initialMenuLanguage = getSettings().backend.menuLanguage;
     state.initialCardFileType = getSettings().backend.cardFileType;
     state.errorString.clear();
     state.initialized = true;
@@ -808,6 +809,7 @@ bool is_restart_pending() noexcept {
     if (data::is_data_path_restart_pending()) {
         return true;
     }
+    if (getSettings().backend.menuLanguage.getValue()!=state.initialMenuLanguage) return true;
     if (getSettings().backend.graphicsBackend.getValue() != state.initialGraphicsBackend) {
         return true;
     }

@@ -1,0 +1,162 @@
+[
+  {
+    "resource": "tt_zelda_button_a_text.bti",
+    "key": "tex1_32x46_683dc853245a0f36_0",
+    "style": "Face",
+    "symbol": "playstation_button_cross_outline"
+  },
+  {
+    "resource": "tt_zelda_button_b_text.bti",
+    "key": "tex1_24x40_b191153a917b3b50_0",
+    "style": "Face",
+    "symbol": "playstation_button_circle_outline"
+  },
+  {
+    "resource": "tt_zelda_button_x_text.bti",
+    "key": "tex1_32x45_3b03f19ac102dd38_0",
+    "style": "Face",
+    "symbol": "playstation_button_square_outline"
+  },
+  {
+    "resource": "tt_zelda_button_y_text.bti",
+    "key": "tex1_32x40_a57e14b2809290fc_0",
+    "style": "Face",
+    "symbol": "playstation_button_triangle_outline"
+  },
+  {
+    "resource": "tt_zelda_button_ab_maru.bti",
+    "key": "tex1_40x40_0bcb924b474aa8a7_2",
+    "style": "Backing",
+    "symbol": ""
+  },
+  {
+    "resource": "tt_zelda_button_x_base.bti",
+    "key": "tex1_32x48_3fb1822c7136e19f_2",
+    "style": "Backing",
+    "symbol": ""
+  },
+  {
+    "resource": "tt_zelda_button_y_base.bti",
+    "key": "tex1_48x32_d7739fede999427e_2",
+    "style": "Backing",
+    "symbol": ""
+  },
+  {
+    "resource": "im_zelda_button_z_base.bti",
+    "key": "tex1_48x48_ac081c1868dcd0df_2",
+    "style": "Backing",
+    "symbol": ""
+  },
+  {
+    "resource": "tt_zelda_button_r_base.bti",
+    "key": "tex1_48x28_3288c9160fe71a61_2",
+    "style": "Backing",
+    "symbol": ""
+  },
+  {
+    "resource": "im_zelda_button_z_text.bti",
+    "key": "tex1_24x40_1868b6990a352fae_2",
+    "style": "Shoulder",
+    "symbol": "playstation_trigger_r1_outline"
+  },
+  {
+    "resource": "im__zelda_button_r_text.bti",
+    "key": "tex1_24x44_e76015069e30f42c_0",
+    "style": "Shoulder",
+    "symbol": "playstation_trigger_r2_outline"
+  },
+  {
+    "resource": "font_00.bti",
+    "key": "tex1_24x24_8f5b85ae836ad2aa_2",
+    "style": "InlineFace",
+    "symbol": "playstation_button_cross_outline"
+  },
+  {
+    "resource": "font_01.bti",
+    "key": "tex1_24x24_d693a49f64dd0597_2",
+    "style": "InlineFace",
+    "symbol": "playstation_button_circle_outline"
+  },
+  {
+    "resource": "font_02.bti",
+    "key": "tex1_24x24_74c00c62624f1e67_5a4b9fd6e2d23f96_8",
+    "style": "InlineFace",
+    "symbol": "playstation_button_square_outline",
+    "replacement_key": "tex1_24x24_74c00c62624f1e67_$_8"
+  },
+  {
+    "resource": "font_03.bti",
+    "key": "tex1_24x24_8b8143aaa181b64a_970dc1662f193ee6_8",
+    "style": "InlineFace",
+    "symbol": "playstation_button_triangle_outline",
+    "replacement_key": "tex1_24x24_8b8143aaa181b64a_$_8"
+  },
+  {
+    "resource": "font_04.bti",
+    "key": "tex1_24x24_dcda11193c4368a1_0773499c79b8de07_8",
+    "style": "InlineShoulder",
+    "symbol": "playstation_trigger_l2_outline",
+    "replacement_key": "tex1_24x24_dcda11193c4368a1_$_8"
+  },
+  {
+    "resource": "font_05.bti",
+    "key": "tex1_24x24_2c8476ec0c54301b_532709965b890d24_8",
+    "style": "InlineShoulder",
+    "symbol": "playstation_trigger_r2_outline",
+    "replacement_key": "tex1_24x24_2c8476ec0c54301b_$_8"
+  },
+  {
+    "resource": "font_06.bti",
+    "key": "tex1_24x24_0b05df21ef5718fa_2",
+    "style": "InlineShoulder",
+    "symbol": "playstation_trigger_r1_outline"
+  },
+  {
+    "resource": "font_11.bti",
+    "key": "tex1_24x24_325323439c4df341_dad893fdbe0afccc_8",
+    "style": "InlineFace",
+    "symbol": "options",
+    "replacement_key": "tex1_24x24_325323439c4df341_$_8"
+  },
+  {
+    "resource": "font_12.bti",
+    "key": "tex1_24x24_2997c2de3939688c_2116ac98c3fe2a7d_8",
+    "style": "InlineFace",
+    "symbol": "playstation_button_cross_outline",
+    "replacement_key": "tex1_24x24_2997c2de3939688c_$_8"
+  },
+  {
+    "resource": "font_07_01.bti",
+    "key": "tex1_24x24_a5cfcf59d288b024_a8f82f64b78daf8c_8",
+    "style": "InlineFace",
+    "symbol": "stick_l",
+    "replacement_key": "tex1_24x24_a5cfcf59d288b024_$_8"
+  },
+  {
+    "resource": "font_07_02.bti",
+    "key": "tex1_24x24_535302a8d703095e_2cf100e32d072f3d_8",
+    "style": "InlineFace",
+    "symbol": "stick_l",
+    "replacement_key": "tex1_24x24_535302a8d703095e_$_8"
+  },
+  {
+    "resource": "font_09.bti",
+    "key": "tex1_24x24_fb460b6cfcecb726_b551f45795f3db64_8",
+    "style": "InlineFace",
+    "symbol": "stick_r",
+    "replacement_key": "tex1_24x24_fb460b6cfcecb726_$_8"
+  },
+  {
+    "resource": "font_09_02.bti",
+    "key": "tex1_24x24_620baa316e0177f4_b551f45795f3db64_8",
+    "style": "InlineFace",
+    "symbol": "stick_r",
+    "replacement_key": "tex1_24x24_620baa316e0177f4_$_8"
+  },
+  {
+    "resource": "font_38.bti",
+    "key": "tex1_24x24_333652d90b3bdd73_2",
+    "style": "InlineFace",
+    "symbol": "stick_r"
+  }
+]

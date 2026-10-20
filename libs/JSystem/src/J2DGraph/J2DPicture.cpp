@@ -1,4 +1,5 @@
 #include "JSystem/JSystem.h" // IWYU pragma: keep
+#include "dusk/ps5_buttons.hpp"
 
 #include "JSystem/J2DGraph/J2DPicture.h"
 #include "JSystem/J2DGraph/J2DScreen.h"
@@ -530,6 +531,9 @@ void J2DPicture::draw(f32 x, f32 y, f32 width, f32 height, bool mirrorX, bool mi
                       bool rotate90) {
     GX_AND_TRACY_SCOPED("J2DPicture::draw")
     if (isVisible() && mTextureNum != 0 && mTexture[0] != NULL) {
+#ifdef __PROSPERO__
+        if (dusk::ps5_buttons::draw(*this, x, y, width, height)) return;
+#endif
         f32 x2 = x + width;
         f32 y2 = y + height;
         for (u8 i = 0; i < mTextureNum; i++) {
@@ -651,6 +655,9 @@ void J2DPicture::drawTexCoord(f32 param_0, f32 param_1, f32 param_2, f32 param_3
                               s16 param_5, s16 param_6, s16 param_7, s16 param_8, s16 param_9,
                               s16 param_10, s16 param_11, Mtx* param_12) {
     if (mTextureNum != 0) {
+#ifdef __PROSPERO__
+        if (dusk::ps5_buttons::draw(*this, param_0, param_1, param_2, param_3, param_12)) return;
+#endif
         for (u8 i = 0; i < mTextureNum; i++) {
             load(i);
         }

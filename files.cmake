@@ -1564,6 +1564,7 @@ set(DUSK_FILES
         src/dusk/speedrun.cpp
         src/dusk/stubs.cpp
         src/dusk/texture_replacements.cpp
+        src/dusk/ps5_buttons.cpp
         src/dusk/texture_replacements.hpp
         src/dusk/touch_camera.cpp
         src/dusk/ui/achievements.cpp
@@ -1671,6 +1672,7 @@ set(DUSK_FILES
         src/dusk/ui/touch_controls_editor.cpp
         src/dusk/ui/touch_controls_editor.hpp
         src/dusk/ui/ui.cpp
+        src/dusk/ui/localization.cpp
         src/dusk/ui/ui.hpp
         src/dusk/ui/warp.cpp
         src/dusk/ui/warp.hpp

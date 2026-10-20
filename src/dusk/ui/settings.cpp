@@ -1,4 +1,5 @@
 #include "settings.hpp"
+#include "localization.hpp"
 
 #include "bool_button.hpp"
 #include "controller_config.hpp"
@@ -1463,6 +1464,37 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
         auto& rightPane = add_child<Pane>(content, Pane::Type::Uncontrolled);
 
         leftPane.add_section("Dusklight");
+        leftPane.register_control(
+            leftPane.add_select_button({
+                .key = "Menu language",
+                .getValue = [] {
+                    return Rml::String{localization::language_name(getSettings().backend.menuLanguage.getValue())};
+                },
+                .isModified = [] {
+                    return getSettings().backend.menuLanguage.getValue() !=
+                           prelaunch_state().initialMenuLanguage;
+                },
+            }),
+            rightPane, [](Pane& pane) {
+                pane.clear();
+                for (const auto& option : std::array<std::pair<const char*, const char*>, 5>{{
+                         {"en", "English"}, {"fr", "Français"}, {"de", "Deutsch"},
+                         {"es", "Español"}, {"it", "Italiano"}}}) {
+                    const std::string id = option.first;
+                    pane.add_button({
+                        .text = option.second,
+                        .isSelected = [id] {
+                            return getSettings().backend.menuLanguage.getValue() == id;
+                        },
+                    }).on_pressed([id] {
+                        mDoAud_seStartMenu(kSoundItemChange);
+                        getSettings().backend.menuLanguage.setValue(id);
+                        config::save();
+                    });
+                }
+                pane.add_text("Choose the language of the startup interface. Game text has its own language setting. Close and reopen Dusklight after changing this option.");
+            });
+
 #if DUSK_CAN_OPEN_DATA_FOLDER
         leftPane.register_control(
             leftPane.add_button("Open Data Folder").on_pressed([] {

@@ -1,4 +1,5 @@
 #include "clamped_text.hpp"
+#include "localization.hpp"
 
 #include <RmlUi/Core/ElementText.h>
 #include <RmlUi/Core/ElementUtilities.h>
@@ -10,7 +11,7 @@
 namespace dusk::ui {
 
 ClampedText::ClampedText(Rml::Element* root, Rml::String text, int maxLines)
-    : Component{root}, mSource{std::move(text)},
+    : Component{root}, mSource{localization::translate(text)},
       mText{static_cast<Rml::ElementText*>(append_text(root, mSource))},
       mMaxLines{std::max(maxLines, 1)} {
     mRoot->SetProperty("white-space", "pre-line");

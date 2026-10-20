@@ -41,6 +41,7 @@
 #include "dusk/audio/DuskDsp.hpp"
 #include "dusk/commands.hpp"
 #include "dusk/config.hpp"
+#include "dusk/ui/localization.hpp"
 #include "dusk/data.hpp"
 #include "dusk/discord_presence.hpp"
 #include "dusk/dusk.h"
@@ -652,6 +653,7 @@ int game_main(int argc, char* argv[]) {
     }
     borealis::sentry::initialize(sentryOptions);
     borealis::crash::install();
+    dusk::ui::localization::initialize();
     // TODO: How to handle this?
     // PADSetDefaultMapping(&defaultPadMapping, PAD_TYPE_STANDARD);
 

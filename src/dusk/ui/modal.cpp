@@ -1,4 +1,5 @@
 #include "modal.hpp"
+#include "localization.hpp"
 
 #include <algorithm>
 #include <utility>
@@ -25,6 +26,7 @@ Modal::Modal(Props props) : WindowSmall("modal"), mProps(std::move(props)) {
         append_text(body, *mProps.bodyText);
     } else {
         body->SetInnerRML(mProps.bodyRml);
+        localization::translate_document(body);
     }
 
     mContentRoot = append(mDialog, "modal-content");
@@ -90,7 +92,9 @@ void Modal::add_action(ModalAction action) {
 }
 
 void Modal::set_body(const Rml::String& bodyRml) {
-    mDialog->QuerySelector("modal-body")->SetInnerRML(bodyRml);
+    auto* body = mDialog->QuerySelector("modal-body");
+    body->SetInnerRML(bodyRml);
+    localization::translate_document(body);
 }
 
 void Modal::set_body_text(const Rml::String& bodyText) {

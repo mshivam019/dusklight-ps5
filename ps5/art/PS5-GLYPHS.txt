@@ -1,0 +1,19 @@
+PlayStation button artwork reference
+
+Source: https://github.com/griches/PS5_Dusklight
+Revision: 577c76212bec33198d69ca727433573ec00beb78
+Original generator: ps5/art/make-glyphs.py (MIT)
+Original five glyph proportions and J2DScreen colour pass are adapted here.
+
+HUD symbols sit in the game's original shaded button bodies, with blue for
+Cross and red for Circle, matching Gary's presentation. Inline prompts combine
+their body and letter in one texture; those use independently generated shaded
+caps with readable PS5 marks. Paletted inline prompts match exact texel hashes
+with wildcard palettes so colour animation does not restore Nintendo letters.
+
+Kenney Input Prompts, CC0: https://kenney.nl/assets/input-prompts
+The CC0 input images and license are under ps5/art/kenney.
+No image data from a game disc is included in this repository or generator.
+Default mapping: A=Cross, B=Circle, X=Square, Y=Triangle, L=L2, R=R2, Z=R1.
+The resource identifiers were found on PAL GZ2P01. Manual console testing is
+required to confirm actual visual layout; registrations alone do not prove it.

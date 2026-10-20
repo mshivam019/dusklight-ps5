@@ -1,4 +1,5 @@
 #include "ui.hpp"
+#include "localization.hpp"
 
 #include "command_console.hpp"
 #include "drop_install_modal.hpp"
@@ -586,7 +587,7 @@ Rml::Element* append_text(Rml::Element* parent, const Rml::String& text) noexcep
     if (doc == nullptr) {
         return nullptr;
     }
-    return parent->AppendChild(doc->CreateTextNode(text));
+    return parent->AppendChild(doc->CreateTextNode(localization::translate(text)));
 }
 
 Rml::Element* append_text_element(
@@ -612,7 +613,7 @@ void set_text_content(Rml::Element* parent, const Rml::String& text) noexcept {
     if (!text.empty() && parent->GetNumChildren() == 1) {
         if (auto* element = dynamic_cast<Rml::ElementText*>(parent->GetFirstChild())) {
             // RmlUi only dirties layout when the node's text changes.
-            element->SetText(text);
+            element->SetText(localization::translate(text));
             return;
         }
     }
